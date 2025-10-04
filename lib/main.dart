@@ -20,6 +20,7 @@ class MyApp extends StatelessWidget {
       title: 'Focus Zone',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        fontFamily: 'Poppins',
         brightness: Brightness.light,
         colorScheme: ColorScheme.fromSeed(
           seedColor: primaryColor,
