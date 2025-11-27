@@ -37,7 +37,19 @@ class _UserGatewayPageState extends State<UserGatewayPage> {
               left: 0,
               right: 0,
               child: Container(
-                height: MediaQuery.of(context).size.height * 0.5,
+                height: MediaQuery.of(context).size.height * 0.345,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.tertiary,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.48,
                 decoration: BoxDecoration(
                   color: Theme.of(
                     context,
@@ -50,7 +62,33 @@ class _UserGatewayPageState extends State<UserGatewayPage> {
                       width: MediaQuery.of(context).size.width * 0.4,
                       "images/adati_logo_txt.png",
                     ),
-                    MyButton(),
+                    SizedBox(height: 10),
+                    MyButton(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      onPressed: () {},
+                    ),
+
+                    SizedBox(height: 20),
+                    MyButton(
+                      label: "Register",
+                      backgroundColor: Theme.of(context).colorScheme.tertiary,
+                      textColor: Theme.of(context).colorScheme.secondary,
+                      borderColor: Theme.of(context).colorScheme.secondary,
+                      onPressed: () {},
+                    ),
+                    SizedBox(height: 20),
+                    TextButton(
+                      onPressed: () {},
+                      child: Text(
+                        "Continue as Guest",
+                        style: TextStyle(
+                          color: Colors.blueAccent,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

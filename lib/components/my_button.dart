@@ -1,37 +1,56 @@
 import 'package:flutter/material.dart';
 
-class MyButton extends StatefulWidget {
+class MyButton extends StatelessWidget {
   final double width;
   final double height;
 
-  MyButton({super.key, this.width = 0.9, this.height = 0.07});
+  final String label;
+  final VoidCallback? onPressed;
+  final Color? backgroundColor;
+  final Color? borderColor;
+  final Color? textColor;
 
-  @override
-  State<MyButton> createState() => _MyButtonState();
-}
+  const MyButton({
+    super.key,
+    this.width = 0.9,
+    this.height = 0.07,
+    this.label = 'Login',
+    this.onPressed,
+    this.backgroundColor,
+    this.borderColor,
+    this.textColor,
+  });
 
-class _MyButtonState extends State<MyButton> {
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    final bg = backgroundColor ?? theme.colorScheme.primary;
+    final border = borderColor ?? Colors.transparent;
+    final txtColor = textColor ?? theme.colorScheme.onPrimary;
+
     return SizedBox(
-      width: MediaQuery.of(context).size.width * widget.width,
-      height: MediaQuery.of(context).size.height * widget.height,
+      width: MediaQuery.of(context).size.width * width,
+      height: MediaQuery.of(context).size.height * height,
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          shadowColor: Theme.of(context).colorScheme.secondary,
+          elevation: 3,
+          shadowColor: theme.colorScheme.primary.withOpacity(0.3),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
+            side: BorderSide(color: border, width: 1.5),
           ),
-          backgroundColor: Theme.of(context).colorScheme.primary,
+          backgroundColor: bg,
+          foregroundColor: txtColor,
         ),
         child: Text(
-          "Login",
+          label,
           style: TextStyle(
-            color: Theme.of(context).colorScheme.secondary,
-            fontSize: 25,
+            color: txtColor,
+            fontSize: 21,
             fontWeight: FontWeight.w600,
-            letterSpacing: 2,
+            letterSpacing: 1.2,
           ),
         ),
       ),
