@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:adati_mobile_app/components/my_button.dart';
+import 'package:adati_mobile_app/pages/login_page.dart';
 import 'package:flutter/material.dart';
 
 class UserGatewayPage extends StatefulWidget {
@@ -64,8 +65,14 @@ class _UserGatewayPageState extends State<UserGatewayPage> {
                     ),
                     SizedBox(height: 10),
                     MyButton(
+                      label: "Login",
                       backgroundColor: Theme.of(context).colorScheme.primary,
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => LoginPage()),
+                        );
+                      },
                     ),
 
                     SizedBox(height: 20),

@@ -14,7 +14,7 @@ class MyButton extends StatelessWidget {
     super.key,
     this.width = 0.9,
     this.height = 0.07,
-    this.label = 'Login',
+    this.label = 'TEXT',
     this.onPressed,
     this.backgroundColor,
     this.borderColor,
