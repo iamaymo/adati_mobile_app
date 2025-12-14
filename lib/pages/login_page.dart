@@ -3,6 +3,7 @@ import 'package:adati_mobile_app/components/my_button.dart';
 import 'package:adati_mobile_app/components/back_button.dart';
 import 'package:adati_mobile_app/components/h1_text.dart';
 import 'package:adati_mobile_app/components/my_textfield.dart';
+import 'package:adati_mobile_app/pages/password_changed_page.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -70,7 +71,14 @@ class _LoginPageState extends State<LoginPage> {
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PasswordChangedPage(),
+                      ),
+                    );
+                  },
                   child: Text(
                     "Forget Password?",
                     style: TextStyle(
@@ -90,6 +98,35 @@ class _LoginPageState extends State<LoginPage> {
                   }
                 },
                 label: "Login",
+              ),
+              SizedBox(height: 30),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Don't have an account? ",
+                    style: TextStyle(color: Colors.grey[800], fontSize: 16),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      // TODO: navigate to the registration page
+                    },
+                    style: ButtonStyle(
+                      padding: MaterialStateProperty.all(EdgeInsets.zero),
+                      minimumSize: MaterialStateProperty.all(Size(0, 0)),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      alignment: Alignment.centerLeft,
+                    ),
+                    child: Text(
+                      "Register Now",
+                      style: TextStyle(
+                        color: Colors.blue[900],
+                        decoration: TextDecoration.underline,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
