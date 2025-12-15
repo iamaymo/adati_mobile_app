@@ -2,6 +2,7 @@
 
 import 'package:adati_mobile_app/components/my_button.dart';
 import 'package:adati_mobile_app/pages/login_page.dart';
+import 'package:adati_mobile_app/pages/register_page.dart';
 import 'package:flutter/material.dart';
 
 class UserGatewayPage extends StatefulWidget {
@@ -81,7 +82,12 @@ class _UserGatewayPageState extends State<UserGatewayPage> {
                       backgroundColor: Theme.of(context).colorScheme.tertiary,
                       textColor: Theme.of(context).colorScheme.secondary,
                       borderColor: Theme.of(context).colorScheme.secondary,
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => RegisterPage()),
+                        );
+                      },
                     ),
                     SizedBox(height: 20),
                     TextButton(

@@ -1,15 +1,25 @@
 import 'package:flutter/material.dart';
 
+// ===============================================
+// 1. MyTextField (الحقل العادي)
+// ===============================================
+
 class MyTextField extends StatefulWidget {
   final String label;
   final FormFieldValidator<String>? validator;
   final TextEditingController? controller;
+  final bool? enabled;
+  final TextInputType? keyboardType;
+  final bool obscureText;
 
   const MyTextField({
     super.key,
     required this.label,
     this.validator,
     this.controller,
+    this.enabled,
+    this.keyboardType,
+    this.obscureText = false,
   });
 
   @override
@@ -17,22 +27,33 @@ class MyTextField extends StatefulWidget {
 }
 
 class _MyTextFieldState extends State<MyTextField> {
-  TextEditingController? _internalController;
+  // المتحكم الداخلي (يستخدم إذا لم يتم تمرير متحكم خارجي)
+  TextEditingController? _controller;
 
   @override
   void initState() {
     super.initState();
-    if (widget.controller == null) {
-      _internalController = TextEditingController();
-    } else {
-      _internalController = widget.controller;
+    _controller = widget.controller ?? TextEditingController();
+  }
+
+  // ⭐️ مهم: تصحيح الوصول إلى المتحكم الداخلي ⭐️
+  @override
+  void didUpdateWidget(covariant MyTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.controller != oldWidget.controller) {
+      // إذا كان المتحكم القديم داخليًا، تخلص منه (نستخدم `_controller` مباشرةً)
+      if (oldWidget.controller == null) {
+        _controller?.dispose();
+      }
+      _controller = widget.controller ?? TextEditingController();
     }
   }
 
   @override
   void dispose() {
+    // التخلص من المتحكم فقط إذا كان داخليًا
     if (widget.controller == null) {
-      _internalController?.dispose();
+      _controller?.dispose();
     }
     super.dispose();
   }
@@ -59,8 +80,11 @@ class _MyTextFieldState extends State<MyTextField> {
       ),
       child: Center(
         child: TextFormField(
-          controller: _internalController,
+          enabled: widget.enabled,
+          keyboardType: widget.keyboardType,
+          controller: _controller,
           validator: widget.validator,
+          obscureText: widget.obscureText,
           decoration: InputDecoration(
             hintText: widget.label,
             border: InputBorder.none,
@@ -73,12 +97,15 @@ class _MyTextFieldState extends State<MyTextField> {
   }
 }
 
+// ===============================================
+// 2. MyTextFieldWS (حقل كلمة المرور مع زر الإظهار/الإخفاء)
+// ===============================================
+
 class MyTextFieldWS extends StatefulWidget {
   final String label;
   final FormFieldValidator<String>? validator;
   final TextEditingController? controller;
-  final bool
-  obscureText; // whether this field should start obscured (default true)
+  final bool obscureText;
 
   const MyTextFieldWS({
     super.key,
@@ -93,24 +120,33 @@ class MyTextFieldWS extends StatefulWidget {
 }
 
 class _MyTextFieldWSState extends State<MyTextFieldWS> {
-  TextEditingController? _internalController;
+  TextEditingController? _controller;
   late bool _obscured;
 
   @override
   void initState() {
     super.initState();
     _obscured = widget.obscureText;
-    if (widget.controller == null) {
-      _internalController = TextEditingController();
-    } else {
-      _internalController = widget.controller;
+    _controller = widget.controller ?? TextEditingController();
+  }
+
+  // ⭐️ مهم: تصحيح الوصول إلى المتحكم الداخلي ⭐️
+  @override
+  void didUpdateWidget(covariant MyTextFieldWS oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.controller != oldWidget.controller) {
+      // إذا كان المتحكم القديم داخليًا، تخلص منه (نستخدم `_controller` مباشرةً)
+      if (oldWidget.controller == null) {
+        _controller?.dispose();
+      }
+      _controller = widget.controller ?? TextEditingController();
     }
   }
 
   @override
   void dispose() {
     if (widget.controller == null) {
-      _internalController?.dispose();
+      _controller?.dispose();
     }
     super.dispose();
   }
@@ -143,7 +179,7 @@ class _MyTextFieldWSState extends State<MyTextFieldWS> {
       ),
       child: Center(
         child: TextFormField(
-          controller: _internalController,
+          controller: _controller,
           validator: widget.validator,
           obscureText: _obscured,
           decoration: InputDecoration(

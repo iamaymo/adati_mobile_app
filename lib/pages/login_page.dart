@@ -1,9 +1,12 @@
-import 'package:adati_mobile_app/components/my_button.dart';
+import 'package:adati_mobile_app/pages/forget_password_page.dart';
 
-import 'package:adati_mobile_app/components/back_button.dart';
-import 'package:adati_mobile_app/components/h1_text.dart';
-import 'package:adati_mobile_app/components/my_textfield.dart';
-import 'package:adati_mobile_app/pages/password_changed_page.dart';
+import '/components/my_button.dart';
+import '/components/back_button.dart';
+import '/components/h1_text.dart';
+import '/components/my_textfield.dart';
+import '/pages/password_changed_page.dart';
+import '/pages/register_page.dart';
+
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -32,9 +35,7 @@ class _LoginPageState extends State<LoginPage> {
     if (value == null || value.trim().isEmpty) {
       return 'Please enter your password';
     }
-    if (value.trim().length < 6) {
-      return 'Password must be at least 6 characters';
-    }
+
     return null;
   }
 
@@ -75,7 +76,7 @@ class _LoginPageState extends State<LoginPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => PasswordChangedPage(),
+                        builder: (context) => ForgetPasswordPage(),
                       ),
                     );
                   },
@@ -109,7 +110,10 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   TextButton(
                     onPressed: () {
-                      // TODO: navigate to the registration page
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => RegisterPage()),
+                      );
                     },
                     style: ButtonStyle(
                       padding: MaterialStateProperty.all(EdgeInsets.zero),
