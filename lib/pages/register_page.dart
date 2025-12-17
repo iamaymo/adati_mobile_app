@@ -1,3 +1,4 @@
+import 'package:adati_mobile_app/pages/home_page.dart';
 import 'package:adati_mobile_app/pages/login_page.dart';
 import 'package:flutter/material.dart';
 import '/components/my_button.dart';
@@ -78,14 +79,16 @@ class _RegisterPageState extends State<RegisterPage> {
         // التسجيل ناجح
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Registration successful! Redirecting to login...'),
+            content: Text('Registration successful!'),
             backgroundColor: Colors.green,
           ),
         );
-        // الانتقال إلى صفحة تسجيل الدخول
+        // ⭐️⭐️ التعديل الحاسم: الانتقال إلى صفحة HomePage ⭐️⭐️
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const LoginPage()),
+          MaterialPageRoute(
+            builder: (context) => const HomePage(),
+          ), // ⬅️ تم التغيير هنا
         );
       } else if (response.statusCode == 400) {
         // خطأ في البيانات المدخلة
