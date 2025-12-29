@@ -60,7 +60,7 @@ class _CartPageState extends State<CartPage> {
                           ),
                           child: Row(
                             children: [
-                              Image.asset(
+                            Image.asset(
                                 p.image,
                                 height: 56,
                                 width: 56,

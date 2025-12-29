@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:adati_mobile_app/services/auth_service.dart';
 import 'package:adati_mobile_app/pages/user_getaway.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class OldHomePage extends StatefulWidget {
+  const OldHomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<OldHomePage> createState() => _OldHomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _OldHomePageState extends State<OldHomePage> {
   void logout() async {
     await AuthService.removeToken(); // حذف التوكن
     if (mounted) {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'cart.dart'; // added
+import 'cart.dart'; 
 
 class Product {
   final String title;
@@ -8,6 +8,7 @@ class Product {
   final String description;
   final double rating;
   final int reviews;
+
   Product({
     required this.title,
     required this.price,
@@ -18,8 +19,6 @@ class Product {
   });
 }
 
-/// Call this helper to show the product dialog:
-/// await showProductDialog(context, product);
 Future<void> showProductDialog(BuildContext context, Product product) {
   return showDialog(
     context: context,
@@ -41,9 +40,7 @@ class _ProductDialogContent extends StatefulWidget {
 }
 
 class _ProductDialogContentState extends State<_ProductDialogContent> {
-  bool isFavorite = false; // default white heart
-
-  void _toggleFavorite() => setState(() => isFavorite = !isFavorite);
+  bool isFavorite = false;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +56,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // top row: back + favorite
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -68,7 +64,7 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                     child: const Icon(Icons.arrow_back, color: Colors.white),
                   ),
                   GestureDetector(
-                    onTap: _toggleFavorite,
+                    onTap: () => setState(() => isFavorite = !isFavorite),
                     child: Icon(
                       isFavorite ? Icons.favorite : Icons.favorite_border,
                       color: isFavorite ? Colors.red : Colors.white,
@@ -78,64 +74,56 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                 ],
               ),
               const SizedBox(height: 8),
-              // product image
+              // 🔥 تم التعديل لاستخدام Image.network
               Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Image.asset(
-                    widget.product.image,
-                    height: 180,
-                    fit: BoxFit.contain,
-                  ),
+                child: Image.network(
+                  widget.product.image,
+                  height: 180,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => 
+                    const Icon(Icons.broken_image, size: 80, color: Colors.white),
                 ),
               ),
-              const SizedBox(height: 6),
-              // title + price
+              const SizedBox(height: 15),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(widget.product.title,
-                      style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                  Expanded(
+                    child: Text(widget.product.title,
+                        style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis),
+                  ),
                   Text(widget.product.price,
                       style: const TextStyle(color: Color(0xFFFFC72C), fontSize: 16, fontWeight: FontWeight.bold)),
                 ],
               ),
               const SizedBox(height: 8),
-              // rating
               Row(
                 children: [
                   Row(
-                    children: List.generate(
-                      5,
-                      (i) => Icon(Icons.star,
-                          size: 18, color: i < widget.product.rating.round() ? Colors.yellow[700] : Colors.grey[700]),
-                    ),
+                    children: List.generate(5, (i) => Icon(Icons.star, size: 18, 
+                        color: i < widget.product.rating.round() ? Colors.yellow[700] : Colors.grey[700])),
                   ),
                   const SizedBox(width: 8),
-                  Text('${widget.product.rating.toStringAsFixed(1)} (${widget.product.reviews} Review)',
+                  Text('${widget.product.rating} (${widget.product.reviews} Review)',
                       style: TextStyle(color: Colors.grey[400], fontSize: 12)),
                 ],
               ),
               const SizedBox(height: 12),
-              // Details header
-              Align(
+              const Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Details',
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                child: Text('Details', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 8),
-              // description
-              Text(
-                widget.product.description,
-                style: TextStyle(color: Colors.grey[300], fontSize: 13),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(widget.product.description, style: TextStyle(color: Colors.grey[300], fontSize: 13)),
               ),
-              const SizedBox(height: 18),
-              // Add to cart button
+              const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // add to cart then close
                     Cart.instance.add(widget.product);
                     Navigator.of(context).pop();
                   },
@@ -144,10 +132,9 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  child: const Text('Add to Cart', style: TextStyle(color: Colors.black, fontSize: 16)),
+                  child: const Text('Add to Cart', style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
-              const SizedBox(height: 8),
             ],
           ),
         ),
