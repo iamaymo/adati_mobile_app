@@ -1,4 +1,4 @@
-import 'package:adati_mobile_app/components/prodct.dart';
+import 'package:adati_mobile_app/components/product_dialog.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -37,7 +37,7 @@ class _Product {
     return _Product(
       id: json['Tool_ID'],
       title: json['Tool_Name'],
-      price: json['Tool_Price'].toString(),
+      price: double.parse(json['Tool_Price'].toString()).toInt().toString(),
       image: json['Tool_Picture'].startsWith('http')
           ? json['Tool_Picture']
           : 'http://10.0.2.2:8000${json['Tool_Picture']}',
@@ -115,6 +115,20 @@ class _HomePageState extends State<HomePage> {
       );
   }
 
+  String _getGreeting() {
+    final hour = DateTime.now().hour; // جلب الساعة الحالية (0-23)
+
+    if (hour >= 5 && hour < 12) {
+      return 'Good Morning!';
+    } else if (hour >= 12 && hour < 17) {
+      return 'Good Afternoon!';
+    } else if (hour >= 17 && hour < 21) {
+      return 'Good Evening!';
+    } else {
+      return 'Good Night!';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -139,29 +153,49 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildMainContent() {
     if (isLoading) return const Center(child: CircularProgressIndicator());
+
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 20),
-            _buildSearchBar(),
-            const SizedBox(height: 20),
-            Expanded(
-              child: GridView.builder(
-                itemCount: products.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.75,
-                  crossAxisSpacing: 15,
-                  mainAxisSpacing: 15,
-                ),
-                itemBuilder: (context, index) =>
-                    _buildProductCard(products[index]),
+      child: RefreshIndicator(
+        onRefresh: loadInitialData, // 👈 هذه الدالة ستُنفذ عند السحب لأسفل
+        color: Theme.of(context).colorScheme.primary, // لون المؤشر
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 20),
+              _buildSearchBar(),
+              const SizedBox(height: 20),
+              Expanded(
+                // 💡 ملاحظة: الـ GridView يجب أن يكون دائماً قابل للسحب (physics) ليتمكن الـ RefreshIndicator من العمل
+                child: products.isEmpty
+                    ? ListView(
+                        // نستخدم ListView هنا لكي يعمل السحب حتى لو كانت القائمة فارغة
+                        children: const [
+                          SizedBox(height: 200),
+                          Center(
+                            child: Text("No tools added yet. Pull to refresh."),
+                          ),
+                        ],
+                      )
+                    : GridView.builder(
+                        physics:
+                            const AlwaysScrollableScrollPhysics(), // 👈 ضروري جداً لعمل السحب
+                        itemCount: products.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.75,
+                              crossAxisSpacing: 15,
+                              mainAxisSpacing: 15,
+                            ),
+                        itemBuilder: (context, index) =>
+                            _buildProductCard(products[index]),
+                      ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -175,7 +209,7 @@ class _HomePageState extends State<HomePage> {
           context,
           Product(
             title: product.title,
-            price: "Y.R ${product.price}",
+            price: "YER ${product.price}",
             image: product.image,
             description: product.description,
           ),
@@ -215,7 +249,7 @@ class _HomePageState extends State<HomePage> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    "Y.R ${product.price}",
+                    "YER ${product.price}",
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.secondary,
                       fontWeight: FontWeight.bold,
@@ -245,8 +279,8 @@ class _HomePageState extends State<HomePage> {
               'Hi $userName!',
               style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
-            const Text(
-              'Good Morning!',
+            Text(
+              _getGreeting(),
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
           ],

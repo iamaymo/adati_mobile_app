@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../components/cart.dart';
-import '../components/prodct.dart';
+import '../components/product_dialog.dart';
 import '../components/payment_sheet.dart'; // added
 import '../components/my_button.dart'; // added
 
@@ -60,11 +60,13 @@ class _CartPageState extends State<CartPage> {
                           ),
                           child: Row(
                             children: [
-                            Image.asset(
+                              Image.network(
                                 p.image,
                                 height: 56,
                                 width: 56,
                                 fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(Icons.broken_image, size: 30),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -79,7 +81,7 @@ class _CartPageState extends State<CartPage> {
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
-                                      p.price,
+                                      "${p.price}, per hour",
                                       style: const TextStyle(
                                         color: Colors.grey,
                                       ),

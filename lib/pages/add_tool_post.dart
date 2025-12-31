@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // نحتاجه لمنع إدخال الحروف في السعر
 import 'package:http/http.dart' as http;
 import 'package:adati_mobile_app/pages/add_tool_image.dart';
 import 'package:adati_mobile_app/services/auth_service.dart';
@@ -16,32 +17,33 @@ class _AddToolPostState extends State<AddToolPost> {
   final _priceController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  // متغير لتخزين مسار الصورة المحددة
   String? _selectedImagePath;
-  bool _isLoading = false; // لمتابعة حالة الرفع
+  bool _isLoading = false;
 
-  // دالة إرسال البيانات إلى السيرفر
+  // دالة للتحقق هل الحقول ممتلئة أم لا
+  bool get _isFormValid {
+    return _nameController.text.trim().isNotEmpty &&
+        _priceController.text.trim().isNotEmpty &&
+        _descriptionController.text.trim().isNotEmpty;
+  }
+
   Future<void> uploadTool() async {
     setState(() => _isLoading = true);
-
     try {
       final uri = Uri.parse('http://10.0.2.2:8000/api/tools/');
       var request = http.MultipartRequest('POST', uri);
-
       String? token = await AuthService.getToken();
       request.headers['Authorization'] = 'Bearer $token';
 
-      // 🛑 يجب أن تطابق هذه الأسماء ما هو موجود في Serializer البايثون تماماً
       request.fields['Tool_Name'] = _nameController.text;
       request.fields['Tool_Description'] = _descriptionController.text;
       request.fields['Tool_Price'] = _priceController.text;
-      request.fields['Tool_Status'] =
-          'True'; // جرب كتابة الحرف الأول كبيراً كما في Python
+      request.fields['Tool_Status'] = 'True';
 
       if (_selectedImagePath != null) {
         request.files.add(
           await http.MultipartFile.fromPath(
-            'Tool_Picture', // 👈 تأكد أن هذا مطابق لاسم الحقل في models.py
+            'Tool_Picture',
             _selectedImagePath!,
           ),
         );
@@ -58,8 +60,6 @@ class _AddToolPostState extends State<AddToolPost> {
         Navigator.pop(context);
       } else {
         if (!mounted) return;
-        // سيظهر لك هنا بالضبط ما الذي يرفضه السيرفر
-        print("Server Error: ${response.body}");
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text("Failed: ${response.body}")));
@@ -76,7 +76,8 @@ class _AddToolPostState extends State<AddToolPost> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        centerTitle: true,
         elevation: 0,
         leading: const BackButton(color: Colors.black),
         title: const Text(
@@ -91,24 +92,30 @@ class _AddToolPostState extends State<AddToolPost> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildLabel('Tool Name'),
+                  _buildLabel('Tool Name *'),
                   TextFormField(
                     controller: _nameController,
+                    onChanged: (value) => setState(() {}), // لتحديث حالة الزر
                     decoration: _inputDecoration('Example: Electric Drill'),
                   ),
                   const SizedBox(height: 20),
 
-                  _buildLabel('Rental Price (per Hour)'),
+                  _buildLabel('Rental Price (Numbers Only) *'),
                   TextFormField(
                     controller: _priceController,
+                    onChanged: (value) => setState(() {}), // لتحديث حالة الزر
                     keyboardType: TextInputType.number,
-                    decoration: _inputDecoration('Example: 3000Y.R'),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ], // يمنع الحروف تماماً
+                    decoration: _inputDecoration('Example: 3000'),
                   ),
                   const SizedBox(height: 20),
 
-                  _buildLabel('Tool Description'),
+                  _buildLabel('Tool Description *'),
                   TextFormField(
                     controller: _descriptionController,
+                    onChanged: (value) => setState(() {}), // لتحديث حالة الزر
                     maxLines: 4,
                     decoration: _inputDecoration(
                       'Write about tool condition...',
@@ -116,16 +123,13 @@ class _AddToolPostState extends State<AddToolPost> {
                   ),
                   const SizedBox(height: 30),
 
-                  // عرض زر الإضافة أو معاينة الصورة
-                  if (_selectedImagePath == null)
-                    _buildAddImageButton()
-                  else
+                  // زر إضافة الصورة - يتم تفعيله فقط عند ملئ الحقول
+                  _buildAddImageButton(),
+
+                  if (_selectedImagePath != null) ...[
+                    const SizedBox(height: 20),
                     _buildImagePreview(),
-
-                  const SizedBox(height: 40),
-
-                  // زر الحفظ النهائي
-                  if (_selectedImagePath != null)
+                    const SizedBox(height: 40),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -149,6 +153,7 @@ class _AddToolPostState extends State<AddToolPost> {
                         ),
                       ),
                     ),
+                  ],
                 ],
               ),
             ),
@@ -156,31 +161,49 @@ class _AddToolPostState extends State<AddToolPost> {
   }
 
   Widget _buildAddImageButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddToolImage()),
-          );
-          if (result != null) {
-            setState(() => _selectedImagePath = result as String);
-          }
-        },
-        icon: const Icon(Icons.image, color: Colors.white),
-        label: const Text(
-          'Add Tool Image',
-          style: TextStyle(color: Colors.white),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFBC02D),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+    bool enabled = _isFormValid;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (!enabled)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 8.0),
+            child: Text(
+              "Please fill all fields to enable image upload",
+              style: TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: enabled
+                ? () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AddToolImage(),
+                      ),
+                    );
+                    if (result != null) {
+                      setState(() => _selectedImagePath = result as String);
+                    }
+                  }
+                : null, // تعطيل الزر برمجياً
+            icon: const Icon(Icons.image, color: Colors.white),
+            label: const Text(
+              'Add Tool Image',
+              style: TextStyle(color: Colors.white),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: enabled ? const Color(0xFFFBC02D) : Colors.grey,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -189,7 +212,7 @@ class _AddToolPostState extends State<AddToolPost> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          "Selected Image:",
+          "Selected Image Preview:",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 10),

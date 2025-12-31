@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'prodct.dart';
+import 'product_dialog.dart';
 
 class Cart {
   Cart._();

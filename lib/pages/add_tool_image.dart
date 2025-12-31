@@ -31,6 +31,16 @@ class _AddToolImageState extends State<AddToolImage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Add Tool Image',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        centerTitle: true,
+        elevation: 0,
+        leading: const BackButton(color: Colors.black),
+      ),
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
@@ -38,8 +48,6 @@ class _AddToolImageState extends State<AddToolImage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const BackButton(),
-              const SizedBox(height: 30),
               Expanded(
                 child: Center(
                   child: Column(
