@@ -5,9 +5,9 @@ import 'package:http/http.dart' as http;
 import 'package:adati_mobile_app/pages/add_tool_post.dart';
 import 'package:adati_mobile_app/pages/login_page.dart';
 import 'package:adati_mobile_app/services/auth_service.dart';
-// import 'package:adati_mobile_app/pages/product_dialog.dart'; // 👈 تأكد من المسار
 import '../components/my_textfield.dart';
 import 'cart_page.dart';
+import 'favorite_page.dart'; // 👈 الإضافة الجديدة هنا
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,7 +22,7 @@ class _Product {
   final String price;
   final String image;
   final String owner;
-  final String description; // 👈 مضاف
+  final String description;
 
   _Product({
     required this.id,
@@ -30,7 +30,7 @@ class _Product {
     required this.price,
     required this.image,
     required this.owner,
-    required this.description, // 👈 مضاف
+    required this.description,
   });
 
   factory _Product.fromJson(Map<String, dynamic> json) {
@@ -116,16 +116,26 @@ class _HomePageState extends State<HomePage> {
   }
 
   String _getGreeting() {
-    final hour = DateTime.now().hour; // جلب الساعة الحالية (0-23)
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 12) return 'Good Morning!';
+    if (hour >= 12 && hour < 17) return 'Good Afternoon!';
+    if (hour >= 17 && hour < 21) return 'Good Evening!';
+    return 'Good Night!';
+  }
 
-    if (hour >= 5 && hour < 12) {
-      return 'Good Morning!';
-    } else if (hour >= 12 && hour < 17) {
-      return 'Good Afternoon!';
-    } else if (hour >= 17 && hour < 21) {
-      return 'Good Evening!';
-    } else {
-      return 'Good Night!';
+  // 👈 دالة اختيار الصفحة بناءً على الـ Index
+  Widget _getSelectedPage() {
+    switch (bottomNavIndex) {
+      case 0:
+        return _buildMainContent();
+      case 1:
+        return const CartPage();
+      case 2:
+        return const FavoritePage(); // 👈 صفحة المفضلة
+      case 3:
+        return const Center(child: Text("Profile Page"));
+      default:
+        return _buildMainContent();
     }
   }
 
@@ -133,7 +143,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.tertiary,
-      body: bottomNavIndex == 1 ? const CartPage() : _buildMainContent(),
+      body: _getSelectedPage(), // 👈 استخدام الدالة الجديدة هنا
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.push(
@@ -156,8 +166,8 @@ class _HomePageState extends State<HomePage> {
 
     return SafeArea(
       child: RefreshIndicator(
-        onRefresh: loadInitialData, // 👈 هذه الدالة ستُنفذ عند السحب لأسفل
-        color: Theme.of(context).colorScheme.primary, // لون المؤشر
+        onRefresh: loadInitialData,
+        color: Theme.of(context).colorScheme.primary,
         backgroundColor: Colors.white,
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -168,10 +178,8 @@ class _HomePageState extends State<HomePage> {
               _buildSearchBar(),
               const SizedBox(height: 20),
               Expanded(
-                // 💡 ملاحظة: الـ GridView يجب أن يكون دائماً قابل للسحب (physics) ليتمكن الـ RefreshIndicator من العمل
                 child: products.isEmpty
                     ? ListView(
-                        // نستخدم ListView هنا لكي يعمل السحب حتى لو كانت القائمة فارغة
                         children: const [
                           SizedBox(height: 200),
                           Center(
@@ -180,8 +188,7 @@ class _HomePageState extends State<HomePage> {
                         ],
                       )
                     : GridView.builder(
-                        physics:
-                            const AlwaysScrollableScrollPhysics(), // 👈 ضروري جداً لعمل السحب
+                        physics: const AlwaysScrollableScrollPhysics(),
                         itemCount: products.length,
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
@@ -201,13 +208,15 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // 👈 تم استعادة تصميم الـ Card الأصلي الخاص بك بالكامل
   Widget _buildProductCard(_Product product) {
     return GestureDetector(
       onTap: () {
-        // 🔥 تحويل البيانات للـ Dialog
         showProductDialog(
           context,
           Product(
+            id: product
+                .id, // تم إضافة الـ ID هنا ليعمل نظام المفضلة داخل الديالوج
             title: product.title,
             price: "YER ${product.price}",
             image: product.image,
@@ -268,6 +277,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // 👈 استعادة الهيدر الأصلي مع الترحيب المتغير
   Widget _buildHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -281,7 +291,7 @@ class _HomePageState extends State<HomePage> {
             ),
             Text(
               _getGreeting(),
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -310,7 +320,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildBottomNavigationBar() {
     return BottomAppBar(
       shape: const CircularNotchedRectangle(),
-      notchMargin: 8.0,
+      notchMargin: 8.0, // 👈 الحفاظ على المسافة الأصلية
       child: SizedBox(
         height: 60,
         child: Row(

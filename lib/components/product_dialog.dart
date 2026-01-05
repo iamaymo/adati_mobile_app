@@ -1,8 +1,12 @@
 import 'package:adati_mobile_app/components/payment_sheet.dart';
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:adati_mobile_app/services/auth_service.dart';
 import 'cart.dart';
 
 class Product {
+  final int id; // أضفنا الـ ID للتعامل مع السيرفر
   final String title;
   final String price;
   final String image;
@@ -11,6 +15,7 @@ class Product {
   final int reviews;
 
   Product({
+    required this.id,
     required this.title,
     required this.price,
     required this.image,
@@ -25,13 +30,11 @@ Future<void> showProductDialog(BuildContext context, Product product) {
     context: context,
     barrierDismissible: true,
     builder: (context) => GestureDetector(
-      // عند الضغط على الخلفية الشفافة سيتم إغلاق الديالوج
       onTap: () => Navigator.of(context).pop(),
       child: Dialog(
         backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: GestureDetector(
-          // نستخدم GestureDetector ثاني هنا لمنع إغلاق الديالوج عند الضغط "داخل" المحتوى
           onTap: () {},
           child: _ProductDialogContent(product: product),
         ),
@@ -52,14 +55,57 @@ class _ProductDialogContent extends StatefulWidget {
 class _ProductDialogContentState extends State<_ProductDialogContent> {
   bool isFavorite = false;
 
-  // دالة للتحقق إذا كان المنتج موجود في السلة أم لا
+  @override
+  void initState() {
+    super.initState();
+    checkIfFavorite();
+  }
+
+  // التحقق من حالة المفضلة عند فتح الديالوج
+  Future<void> checkIfFavorite() async {
+    final token = await AuthService.getToken();
+    try {
+      final response = await http.get(
+        Uri.parse(
+          'http://10.0.2.2:8000/api/favorites/check/${widget.product.id}/',
+        ),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() => isFavorite = data['is_favorite']);
+      }
+    } catch (e) {
+      debugPrint("Error checking favorite: $e");
+    }
+  }
+
+  // تغيير حالة المفضلة في السيرفر
+  Future<void> toggleFavorite() async {
+    final token = await AuthService.getToken();
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8000/api/favorites/toggle/'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({'tool_id': widget.product.id}),
+      );
+      if (response.statusCode == 200) {
+        setState(() => isFavorite = !isFavorite);
+      }
+    } catch (e) {
+      debugPrint("Error toggling favorite: $e");
+    }
+  }
+
   bool get isInCart {
     return Cart.instance.items.value.any(
       (item) => item.title == widget.product.title,
     );
   }
 
-  // دالة لفتح الصورة في شاشة كاملة مع إمكانية الزووم
   void _showFullScreenImage(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -114,7 +160,7 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                     child: const Icon(Icons.arrow_back, color: Colors.white),
                   ),
                   GestureDetector(
-                    onTap: () => setState(() => isFavorite = !isFavorite),
+                    onTap: toggleFavorite, // استدعاء دالة السيرفر
                     child: Icon(
                       isFavorite ? Icons.favorite : Icons.favorite_border,
                       color: isFavorite ? Colors.red : Colors.white,
@@ -125,7 +171,7 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
               ),
               const SizedBox(height: 8),
 
-              // صورة المنتج مع خاصية الضغط للتكبير
+              // صورة المنتج
               GestureDetector(
                 onTap: () => _showFullScreenImage(context),
                 child: Center(
@@ -173,7 +219,7 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                           ),
                         ),
                         const TextSpan(
-                          text: "per hour",
+                          text: "YER",
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 13,
@@ -195,7 +241,7 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                       5,
                       (i) => Icon(
                         Icons.star,
-                        size: 25,
+                        size: 20,
                         color: i < widget.product.rating.round()
                             ? Colors.yellow[700]
                             : Colors.grey[700],
@@ -233,19 +279,17 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
               ),
               const SizedBox(height: 24),
 
-              // زر الإضافة للسلة / الحذف
+              // أزرار التحكم (تصميم مدمج)
               SizedBox(
                 width: double.infinity,
                 child: Row(
                   children: [
-                    // زر Add to Cart / Remove from Cart
                     Expanded(
                       flex: 3,
                       child: GestureDetector(
                         onTap: () {
                           setState(() {
                             if (isInCart) {
-                              // إذا كان موجود، نبحث عنه ونحذفه
                               final index = Cart.instance.items.value
                                   .indexWhere(
                                     (item) =>
@@ -253,7 +297,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                                   );
                               if (index != -1) Cart.instance.removeAt(index);
                             } else {
-                              // إذا مش موجود نضيفه
                               Cart.instance.add(widget.product);
                             }
                           });
@@ -261,7 +304,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                         child: Container(
                           height: 55,
                           decoration: BoxDecoration(
-                            // يتغير اللون للأحمر إذا كان المنتج مضافاً للسلة
                             color: isInCart
                                 ? Colors.red[700]
                                 : Theme.of(context).colorScheme.primary,
@@ -283,25 +325,20 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                         ),
                       ),
                     ),
-
-                    // فاصل عمودي شفاف يشق الزرين
                     Container(
                       width: 1.5,
                       height: 55,
                       color: const Color(0xFF1E1E1E),
                     ),
-
-                    // زر Rent Now (الأيمن - أصفر)
                     Expanded(
                       flex: 2,
                       child: GestureDetector(
                         onTap: () {
                           showPaymentMethodSheet(
                             context,
-                            amount: Cart.instance.totalPrice(),
+                            amount: 0, // يمكنك تمرير السعر الحقيقي هنا
                             onPaid: () {
                               Navigator.of(context).pop();
-                              Cart.instance.clear();
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text('Payment successful'),
