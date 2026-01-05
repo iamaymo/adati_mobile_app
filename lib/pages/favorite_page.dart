@@ -25,7 +25,9 @@ class _FavoritePageState extends State<FavoritePage> {
     final token = await AuthService.getToken();
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/favorites/'), // تأكد من المسار في السيرفر
+        Uri.parse(
+          'http://10.0.2.2:8000/api/favorites/',
+        ), // تأكد من المسار في السيرفر
         headers: {'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
@@ -64,23 +66,25 @@ class _FavoritePageState extends State<FavoritePage> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.tertiary,
       appBar: AppBar(
-        title: const Text("My Favorites", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          "My Favorites",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        centerTitle: true,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : favoriteItems.isEmpty
-              ? _buildEmptyState()
-              : ListView.builder(
-                  padding: const EdgeInsets.all(20),
-                  itemCount: favoriteItems.length,
-                  itemBuilder: (context, index) {
-                    final item = favoriteItems[index];
-                    return _buildFavoriteItem(item);
-                  },
-                ),
+          ? _buildEmptyState()
+          : ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: favoriteItems.length,
+              itemBuilder: (context, index) {
+                final item = favoriteItems[index];
+                return _buildFavoriteItem(item);
+              },
+            ),
     );
   }
 
@@ -91,7 +95,10 @@ class _FavoritePageState extends State<FavoritePage> {
         children: [
           Icon(Icons.favorite_border, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 10),
-          Text("Your favorite list is empty", style: TextStyle(color: Colors.grey[600])),
+          Text(
+            "Your favorite list is empty",
+            style: TextStyle(color: Colors.grey[600]),
+          ),
         ],
       ),
     );
@@ -110,7 +117,11 @@ class _FavoritePageState extends State<FavoritePage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
         ],
       ),
       child: Row(
@@ -122,7 +133,8 @@ class _FavoritePageState extends State<FavoritePage> {
               width: 70,
               height: 70,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
+              errorBuilder: (context, error, stackTrace) =>
+                  const Icon(Icons.broken_image),
             ),
           ),
           const SizedBox(width: 15),
@@ -130,11 +142,20 @@ class _FavoritePageState extends State<FavoritePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item['Tool_Name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(
+                  item['Tool_Name'],
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
                 const SizedBox(height: 5),
                 Text(
                   "YER ${item['Tool_Price']}",
-                  style: TextStyle(color: Theme.of(context).colorScheme.secondary, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.secondary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),

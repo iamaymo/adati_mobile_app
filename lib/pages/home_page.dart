@@ -7,7 +7,8 @@ import 'package:adati_mobile_app/pages/login_page.dart';
 import 'package:adati_mobile_app/services/auth_service.dart';
 import '../components/my_textfield.dart';
 import 'cart_page.dart';
-import 'favorite_page.dart'; // 👈 الإضافة الجديدة هنا
+import 'favorite_page.dart';
+import 'profile_page.dart'; // 👈 استيراد صفحة البروفايل الجديدة
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -123,7 +124,7 @@ class _HomePageState extends State<HomePage> {
     return 'Good Night!';
   }
 
-  // 👈 دالة اختيار الصفحة بناءً على الـ Index
+  // دالة اختيار الصفحة بناءً على الـ Index
   Widget _getSelectedPage() {
     switch (bottomNavIndex) {
       case 0:
@@ -131,9 +132,9 @@ class _HomePageState extends State<HomePage> {
       case 1:
         return const CartPage();
       case 2:
-        return const FavoritePage(); // 👈 صفحة المفضلة
+        return const FavoritePage();
       case 3:
-        return const Center(child: Text("Profile Page"));
+        return const ProfilePage(); // 👈 تم ربط صفحة البروفايل هنا
       default:
         return _buildMainContent();
     }
@@ -143,7 +144,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.tertiary,
-      body: _getSelectedPage(), // 👈 استخدام الدالة الجديدة هنا
+      body: _getSelectedPage(),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.push(
@@ -208,15 +209,13 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // 👈 تم استعادة تصميم الـ Card الأصلي الخاص بك بالكامل
   Widget _buildProductCard(_Product product) {
     return GestureDetector(
       onTap: () {
         showProductDialog(
           context,
           Product(
-            id: product
-                .id, // تم إضافة الـ ID هنا ليعمل نظام المفضلة داخل الديالوج
+            id: product.id,
             title: product.title,
             price: "YER ${product.price}",
             image: product.image,
@@ -277,7 +276,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // 👈 استعادة الهيدر الأصلي مع الترحيب المتغير
   Widget _buildHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -320,7 +318,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildBottomNavigationBar() {
     return BottomAppBar(
       shape: const CircularNotchedRectangle(),
-      notchMargin: 8.0, // 👈 الحفاظ على المسافة الأصلية
+      notchMargin: 8.0,
       child: SizedBox(
         height: 60,
         child: Row(
