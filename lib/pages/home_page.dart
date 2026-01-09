@@ -22,6 +22,7 @@ class _Product {
   final String title;
   final String price;
   final String image;
+  final int ownerId;
   final String owner;
   final String description;
 
@@ -30,6 +31,7 @@ class _Product {
     required this.title,
     required this.price,
     required this.image,
+    required this.ownerId,
     required this.owner,
     required this.description,
   });
@@ -42,6 +44,7 @@ class _Product {
       image: json['Tool_Picture'].startsWith('http')
           ? json['Tool_Picture']
           : 'http://10.0.2.2:8000${json['Tool_Picture']}',
+      ownerId: json['User_ID'] ?? 0,
       owner: json['owner_name'] ?? "Unknown",
       description:
           json['Tool_Description'] ?? "لا يوجد وصف لهذه الأداة حالياً.",
@@ -66,6 +69,8 @@ class _HomePageState extends State<HomePage> {
     await fetchTools();
   }
 
+  int? currentUserId;
+
   Future<void> fetchUserData() async {
     final token = await AuthService.getToken();
     if (token == null) {
@@ -79,7 +84,10 @@ class _HomePageState extends State<HomePage> {
       );
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (mounted) setState(() => userName = data['User_Name'] ?? "User");
+        setState(() {
+          userName = data['User_Name'] ?? "User";
+          currentUserId = data['User_ID'] ?? 0; // جلب الـ ID الخاص بك
+        });
       }
     } catch (e) {
       print("User Fetch Error: $e");
@@ -215,12 +223,14 @@ class _HomePageState extends State<HomePage> {
         showProductDialog(
           context,
           Product(
+            ownerId: product.ownerId,
             id: product.id,
             title: product.title,
             price: "YER ${product.price}",
             image: product.image,
             description: product.description,
           ),
+          currentUserId,
         );
       },
       child: Container(

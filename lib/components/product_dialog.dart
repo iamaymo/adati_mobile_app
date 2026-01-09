@@ -7,6 +7,7 @@ import 'cart.dart';
 
 class Product {
   final int id; // أضفنا الـ ID للتعامل مع السيرفر
+  final int ownerId;
   final String title;
   final String price;
   final String image;
@@ -16,6 +17,7 @@ class Product {
 
   Product({
     required this.id,
+    required this.ownerId,
     required this.title,
     required this.price,
     required this.image,
@@ -25,7 +27,11 @@ class Product {
   });
 }
 
-Future<void> showProductDialog(BuildContext context, Product product) {
+Future<void> showProductDialog(
+  BuildContext context,
+  Product product,
+  int? currentUserId,
+) {
   return showDialog(
     context: context,
     barrierDismissible: true,
@@ -36,7 +42,10 @@ Future<void> showProductDialog(BuildContext context, Product product) {
         insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: GestureDetector(
           onTap: () {},
-          child: _ProductDialogContent(product: product),
+          child: _ProductDialogContent(
+            product: product,
+            currentUserId: currentUserId,
+          ),
         ),
       ),
     ),
@@ -45,8 +54,12 @@ Future<void> showProductDialog(BuildContext context, Product product) {
 
 class _ProductDialogContent extends StatefulWidget {
   final Product product;
-  const _ProductDialogContent({Key? key, required this.product})
-    : super(key: key);
+  final int? currentUserId;
+  const _ProductDialogContent({
+    Key? key,
+    required this.product,
+    this.currentUserId,
+  }) : super(key: key);
 
   @override
   State<_ProductDialogContent> createState() => _ProductDialogContentState();
@@ -58,6 +71,7 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
   @override
   void initState() {
     super.initState();
+
     checkIfFavorite();
   }
 
@@ -280,98 +294,118 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
               const SizedBox(height: 24),
 
               // أزرار التحكم (تصميم مدمج)
-              SizedBox(
-                width: double.infinity,
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            if (isInCart) {
-                              final index = Cart.instance.items.value
-                                  .indexWhere(
-                                    (item) =>
-                                        item.title == widget.product.title,
-                                  );
-                              if (index != -1) Cart.instance.removeAt(index);
-                            } else {
-                              Cart.instance.add(widget.product);
-                            }
-                          });
-                        },
-                        child: Container(
-                          height: 55,
-                          decoration: BoxDecoration(
-                            color: isInCart
-                                ? Colors.red[700]
-                                : Theme.of(context).colorScheme.primary,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(15),
-                              bottomLeft: Radius.circular(15),
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              isInCart ? 'Remove from Cart' : 'Add to Cart',
-                              style: TextStyle(
-                                color: isInCart ? Colors.white : Colors.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+              widget.product.ownerId == widget.currentUserId
+                  ? Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Center(
+                        child: Text(
+                          "You are the owner of this tool",
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
                           ),
                         ),
                       ),
-                    ),
-                    Container(
-                      width: 1.5,
-                      height: 55,
-                      color: const Color(0xFF1E1E1E),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: GestureDetector(
-                        onTap: () {
-                          showPaymentMethodSheet(
-                            context,
-                            amount: 0, // يمكنك تمرير السعر الحقيقي هنا
-                            onPaid: () {
-                              Navigator.of(context).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Payment successful'),
+                    )
+                  : SizedBox(
+                      width: double.infinity,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  if (isInCart) {
+                                    final index = Cart.instance.items.value
+                                        .indexWhere(
+                                          (item) =>
+                                              item.title ==
+                                              widget.product.title,
+                                        );
+                                    if (index != -1)
+                                      Cart.instance.removeAt(index);
+                                  } else {
+                                    Cart.instance.add(widget.product);
+                                  }
+                                });
+                              },
+                              child: Container(
+                                height: 55,
+                                decoration: BoxDecoration(
+                                  color: isInCart
+                                      ? Colors.red[700]
+                                      : Theme.of(context).colorScheme.primary,
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(15),
+                                    bottomLeft: Radius.circular(15),
+                                  ),
                                 ),
-                              );
-                            },
-                          );
-                        },
-                        child: Container(
-                          height: 55,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.tertiary,
-                            borderRadius: const BorderRadius.only(
-                              topRight: Radius.circular(15),
-                              bottomRight: Radius.circular(15),
-                            ),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'Rent Now',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                                child: Center(
+                                  child: Text(
+                                    isInCart
+                                        ? 'Remove from Cart'
+                                        : 'Add to Cart',
+                                    style: TextStyle(
+                                      color: isInCart
+                                          ? Colors.white
+                                          : Colors.black,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                          Container(
+                            width: 1.5,
+                            height: 55,
+                            color: const Color(0xFF1E1E1E),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: GestureDetector(
+                              onTap: () {
+                                showPaymentMethodSheet(
+                                  context,
+                                  amount: 0,
+                                  onPaid: () {
+                                    Navigator.of(context).pop();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Payment successful'),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                              child: Container(
+                                height: 55,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.tertiary,
+                                  borderRadius: const BorderRadius.only(
+                                    topRight: Radius.circular(15),
+                                    bottomRight: Radius.circular(15),
+                                  ),
+                                ),
+                                child: const Center(
+                                  child: Text(
+                                    'Rent Now',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
             ],
           ),
         ),
