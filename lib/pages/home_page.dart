@@ -6,6 +6,7 @@ import 'package:adati_mobile_app/pages/add_tool_post.dart';
 import 'package:adati_mobile_app/pages/login_page.dart';
 import 'package:adati_mobile_app/services/auth_service.dart';
 import '../components/my_textfield.dart';
+import '../components/filter_button.dart';
 import 'cart_page.dart';
 import 'favorite_page.dart';
 import 'profile_page.dart'; // 👈 استيراد صفحة البروفايل الجديدة
@@ -185,7 +186,7 @@ class _HomePageState extends State<HomePage> {
               _buildHeader(),
               const SizedBox(height: 20),
               _buildSearchBar(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               Expanded(
                 child: products.isEmpty
                     ? ListView(
@@ -226,7 +227,7 @@ class _HomePageState extends State<HomePage> {
             ownerId: product.ownerId,
             id: product.id,
             title: product.title,
-            price: "YER ${product.price}",
+            price: "${product.price}",
             image: product.image,
             description: product.description,
           ),
@@ -312,15 +313,7 @@ class _HomePageState extends State<HomePage> {
       children: [
         Expanded(child: MyTextField(label: 'Search tools...')),
         const SizedBox(width: 12),
-        Container(
-          height: 58,
-          width: 58,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: const Icon(Icons.search, color: Colors.white),
-        ),
+        SizedBox(height: 58, width: 58, child: Center(child: FilterButton())),
       ],
     );
   }
