@@ -160,7 +160,8 @@ class _HomePageState extends State<HomePage> {
       case 1:
         return const CartPage();
       case 2:
-        return const FavoritePage();
+        // return const FavoritePage();
+        return const OldHomePage();
       case 3:
         return const ProfilePage(); // 👈 تم ربط صفحة البروفايل هنا
       default:
@@ -332,7 +333,7 @@ class _HomePageState extends State<HomePage> {
       children: [
         Expanded(child: MyTextField(label: 'Search tools...')),
         const SizedBox(width: 12),
-        SizedBox(height: 58, width: 58, child: Center(child: FilterButton())),
+        SizedBox(height: 55, width: 55, child: Center(child: FilterButton())),
       ],
     );
   }

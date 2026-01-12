@@ -3,6 +3,7 @@ import 'package:adati_mobile_app/components/h1_text.dart';
 import 'package:adati_mobile_app/components/my_button.dart';
 import 'package:adati_mobile_app/components/my_textfield.dart';
 import 'package:adati_mobile_app/pages/login_page.dart';
+import 'package:adati_mobile_app/pages/verification_page.dart';
 import 'package:flutter/material.dart';
 
 class ForgetPasswordPage extends StatefulWidget {
@@ -14,6 +15,7 @@ class ForgetPasswordPage extends StatefulWidget {
 
 class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _emailController = TextEditingController();
 
   String? _emailValidator(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -50,11 +52,25 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                 child: MyTextField(
                   label: "Enter your email",
                   validator: _emailValidator,
+                  controller: _emailController,
                 ),
               ),
 
               SizedBox(height: 25),
-              MyButton(onPressed: () {}, label: "Send Code"),
+              MyButton(
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            VerificationPage(email: _emailController.text),
+                      ),
+                    );
+                  }
+                },
+                label: "Send Code",
+              ),
               SizedBox(height: 30),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
