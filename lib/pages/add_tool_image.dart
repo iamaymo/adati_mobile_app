@@ -34,7 +34,7 @@ class _AddToolImageState extends State<AddToolImage> {
       appBar: AppBar(
         title: const Text(
           'Add Tool Image',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.black,),
         ),
         backgroundColor: Theme.of(context).colorScheme.primary,
         centerTitle: true,

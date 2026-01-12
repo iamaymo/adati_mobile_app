@@ -38,10 +38,17 @@ class _Product {
   });
 
   factory _Product.fromJson(Map<String, dynamic> json) {
+    // حل مشكلة تحويل السعر من 3000.00 إلى 3000
+    String formattedPrice = "0";
+    if (json['Tool_Price'] != null) {
+      double? priceDouble = double.tryParse(json['Tool_Price'].toString());
+      formattedPrice = priceDouble?.toInt().toString() ?? "0";
+    }
+
     return _Product(
-      id: json['Tool_ID'],
-      title: json['Tool_Name'],
-      price: double.parse(json['Tool_Price'].toString()).toInt().toString(),
+      id: json['Tool_ID'] ?? 0,
+      title: json['Tool_Name'] ?? "No Name",
+      price: formattedPrice,
       image: json['Tool_Picture'].startsWith('http')
           ? json['Tool_Picture']
           : 'http://10.0.2.2:8000${json['Tool_Picture']}',
@@ -97,21 +104,33 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> fetchTools() async {
     final token = await AuthService.getToken();
+    if (token == null) return;
+
     try {
       final response = await http.get(
         Uri.parse('http://10.0.2.2:8000/api/tools/'),
-        headers: {'Authorization': 'Bearer $token'},
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
       );
+
       if (response.statusCode == 200) {
+        // فك تشفير البيانات ودعم اللغة العربية
         List<dynamic> data = json.decode(utf8.decode(response.bodyBytes));
-        if (mounted)
+
+        if (mounted) {
           setState(() {
             products = data.map((item) => _Product.fromJson(item)).toList();
             isLoading = false;
           });
+        }
+      } else {
+        setState(() => isLoading = false);
       }
     } catch (e) {
-      setState(() => isLoading = false);
+      print("Error fetching tools: $e");
+      if (mounted) setState(() => isLoading = false);
     }
   }
 

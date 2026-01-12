@@ -82,7 +82,7 @@ class _AddToolPostState extends State<AddToolPost> {
         leading: const BackButton(color: Colors.black),
         title: const Text(
           'Add Tool Details',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.black,),
         ),
       ),
       body: _isLoading

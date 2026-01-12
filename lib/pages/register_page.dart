@@ -1,5 +1,7 @@
 import 'package:adati_mobile_app/pages/home_page.dart';
+import 'package:adati_mobile_app/pages/idcard_image_picker.dart';
 import 'package:adati_mobile_app/pages/login_page.dart';
+import 'package:adati_mobile_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import '/components/my_button.dart';
 import '/components/back_button.dart';
@@ -30,6 +32,31 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _districtController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  // New: Yemen cities and selected city
+  final List<String> _yemenCities = [
+    "Sana'a",
+    "Aden",
+    "Taiz",
+    "Al Hudaydah",
+    "Ibb",
+    "Dhamar",
+    "Al Mukalla",
+    "Marib",
+    "Amran",
+    "Hajjah",
+    "Saada",
+    "Al Mahwit",
+    "Raymah",
+    "Shabwah",
+    "Abyan",
+    "Lahij",
+    "Socotra",
+    "Al Bayda",
+    "Al Dhale'",
+    "Al Mahrah",
+  ];
+  String? _selectedCity;
+
   final TextEditingController _countryCodeController = TextEditingController(
     text: '+967',
   );
@@ -46,93 +73,74 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  Future<void> registerUser() async {
-    // 1. تجميع البيانات
-    final userName =
-        '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}';
-
-    final userAddress =
-        '${_cityController.text.trim()}, ${_districtController.text.trim()}';
-
-    // 2. تجميع البيانات كـ JSON
-    final Map<String, dynamic> requestBody = {
-      // يجب أن تكون أسماء الحقول مطابقة لـ Serializer في Django
-      "User_Name": userName,
-      "User_Email": _emailController.text.trim(),
-      "Phone_Number": _phoneNumberController.text.trim(),
-      "User_Address": userAddress,
-      "password": _passwordController.text, // غالباً ما يتوقع Django 'password'
-    };
-
+  // Replace previous registerUser() with this multipart version that accepts imagePath
+  Future<void> registerUser(String imagePath) async {
     final url = Uri.parse('$baseUrl/register/');
 
     try {
-      // 3. إرسال طلب POST
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(requestBody),
+      var request = http.MultipartRequest('POST', url);
+
+      // Add text fields (field names should match backend expected names)
+      request.fields['User_Name'] =
+          "${_firstNameController.text.trim()} ${_lastNameController.text.trim()}";
+      request.fields['User_Email'] = _emailController.text.trim();
+      request.fields['Phone_Number'] = _phoneNumberController.text.trim();
+      request.fields['User_Address'] = _cityController.text
+          .trim(); // المدينة فقط
+      request.fields['Street'] = _districtController.text.trim();
+      request.fields['password'] = _passwordController.text;
+
+      // Attach image file
+      request.files.add(
+        await http.MultipartFile.fromPath('ID_Card_Image', imagePath),
       );
 
-      // 4. معالجة الرد من الخادم
-      if (response.statusCode == 201) {
-        // التسجيل ناجح
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Registration successful!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        // ⭐️⭐️ التعديل الحاسم: الانتقال إلى صفحة HomePage ⭐️⭐️
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const HomePage(),
-          ), // ⬅️ تم التغيير هنا
-        );
-      } else if (response.statusCode == 400) {
-        // خطأ في البيانات المدخلة
-        String errorMessage = "Registration failed: ";
-        try {
-          final errorData = jsonDecode(response.body);
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
 
-          if (errorData is Map) {
-            errorData.forEach((key, value) {
-              errorMessage +=
-                  "$key: ${value.toString().replaceAll('[', '').replaceAll(']', '')}; ";
-            });
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        // 1. اطبع الرد كاملاً في الـ Terminal عندك
+        print("FULL SERVER RESPONSE: ${response.body}");
+
+        try {
+          final Map<String, dynamic> responseData = json.decode(response.body);
+
+          // 2. تأكد من اسم مفتاح التوكن (قد يكون 'access' أو 'token' أو 'token_key')
+          String? token = responseData['access'] ?? responseData['token'];
+
+          if (token != null) {
+            await AuthService.saveToken(token);
+            print("TOKEN SAVED!");
           } else {
-            errorMessage = "Registration failed. Raw error: ${response.body}";
+            print(
+              "WARNING: No token found in response keys: ${responseData.keys}",
+            );
           }
         } catch (e) {
-          errorMessage =
-              "Registration failed. Server sent an unreadable error. Status: 400";
+          print("JSON PARSE ERROR: $e");
         }
-        print(errorMessage);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            duration: const Duration(seconds: 8),
-            backgroundColor: Colors.red,
-          ),
+
+        // 3. الانتقال للهوم (وضعته خارج الـ try للتأكد من حدوثه حتى لو فشل حفظ التوكن)
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+          (route) => false,
         );
       } else {
-        // خطأ خادم آخر (مثل 500)
+        // Show server response (may contain validation errors)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Server Error: ${response.statusCode}. Please try again later.',
-            ),
-            backgroundColor: Colors.orange,
+            content: Text('Registration failed: ${response.body}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 6),
           ),
         );
       }
     } catch (e) {
-      // خطأ في الاتصال بالشبكة
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Connection Error: Cannot reach the server at $baseUrl. Ensure Django is running.',
+            'Connection Error: Cannot reach the server at $baseUrl. $e',
           ),
           backgroundColor: Colors.red.shade900,
         ),
@@ -165,8 +173,13 @@ class _RegisterPageState extends State<RegisterPage> {
                             controller: _firstNameController, // 👈 ربط
                             label: "First Name",
                             validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return "First name is required";
+                              final v = value?.trim() ?? '';
+                              if (v.isEmpty) return "First name is required";
+                              // Allow Arabic and Latin letters, spaces, hyphen/apostrophe; min 2 chars
+                              if (!RegExp(
+                                r"^[\u0600-\u06FFa-zA-Z\s'\-]{2,}$",
+                              ).hasMatch(v)) {
+                                return "Enter a valid first name (letters only)";
                               }
                               return null;
                             },
@@ -178,8 +191,12 @@ class _RegisterPageState extends State<RegisterPage> {
                             label: "Last Name",
                             controller: _lastNameController, // 👈 ربط
                             validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return "Last name is required";
+                              final v = value?.trim() ?? '';
+                              if (v.isEmpty) return "Last name is required";
+                              if (!RegExp(
+                                r"^[\u0600-\u06FFa-zA-Z\s'\-]{2,}$",
+                              ).hasMatch(v)) {
+                                return "Enter a valid last name (letters only)";
                               }
                               return null;
                             },
@@ -194,13 +211,11 @@ class _RegisterPageState extends State<RegisterPage> {
                       label: "Email",
                       controller: _emailController, // 👈 ربط
                       validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return "Email is required";
-                        }
-                        final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                        if (!emailRegex.hasMatch(value)) {
-                          return "Enter a valid email";
-                        }
+                        final v = value?.trim() ?? '';
+                        if (v.isEmpty) return "Email is required";
+                        final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+                        if (!emailRegex.hasMatch(v))
+                          return "Enter a valid email address";
                         return null;
                       },
                     ),
@@ -224,11 +239,26 @@ class _RegisterPageState extends State<RegisterPage> {
                             controller: _phoneNumberController, // 👈 ربط
                             keyboardType: TextInputType.number,
                             validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
+                              final v = value?.trim() ?? '';
+                              if (v.isEmpty) {
                                 return "Phone number is required";
                               }
-                              if (!RegExp(r'^\d{9}$').hasMatch(value)) {
-                                return "Phone number must be 9 digits";
+                              // 1) Check length first
+                              if (v.length != 9) {
+                                return "Phone must be exactly 9 digits";
+                              }
+                              // 2) Check first digit
+                              if (!v.startsWith('7')) {
+                                return "Phone must start with 7";
+                              }
+                              // 3) Check second digit allowed set
+                              final second = v[1];
+                              if (!'7310'.contains(second)) {
+                                return "Second digit must be one of: 7, 3, 1, or 0";
+                              }
+                              // Optional: ensure all characters are digits
+                              if (!RegExp(r'^\d{9}$').hasMatch(v)) {
+                                return "Phone must contain only digits";
                               }
                               return null;
                             },
@@ -242,25 +272,69 @@ class _RegisterPageState extends State<RegisterPage> {
                     Row(
                       children: [
                         Expanded(
-                          child: MyTextField(
-                            label: "City",
-                            controller: _cityController, // 👈 ربط
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return "City is required";
-                              }
-                              return null;
-                            },
+                          child: Container(
+                            height: 60,
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: const Color.fromARGB(255, 230, 229, 229),
+                                width: 1.5,
+                              ),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x1A000000),
+                                  blurRadius: 6,
+                                  offset: Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: DropdownButtonFormField<String>(
+                                value: _selectedCity,
+                                isExpanded: true,
+                                dropdownColor: Colors.grey[100],
+                                decoration: const InputDecoration(
+                                  hintText: "City",
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
+                                ),
+                                icon: const Icon(Icons.keyboard_arrow_down),
+                                items: _yemenCities
+                                    .map(
+                                      (c) => DropdownMenuItem(
+                                        value: c,
+                                        child: Text(c),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (val) {
+                                  setState(() {
+                                    _selectedCity = val;
+                                    _cityController.text = val ?? '';
+                                  });
+                                },
+                                validator: (value) {
+                                  if (value == null || value.isEmpty)
+                                    return "City is required";
+                                  return null;
+                                },
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: MyTextField(
-                            label: "District",
+                            label: "Street",
                             controller: _districtController, // 👈 ربط
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
-                                return "District is required";
+                                return "Street is required";
                               }
                               return null;
                             },
@@ -290,13 +364,30 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 25),
               MyButton(
-                onPressed: () {
-                  // التحقق من المدخلات قبل الإرسال
+                onPressed: () async {
+                  // Validate form first
                   if (_formKey.currentState?.validate() ?? false) {
-                    registerUser();
+                    // Navigate to IdcardImagePicker and wait for returned image path (front image)
+                    final dynamic result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const IdcardImagePicker(),
+                      ),
+                    );
+
+                    if (result != null &&
+                        result is Map &&
+                        result['front'] != null) {
+                      // 3. استدعاء دالة التسجيل مع مسار الصورة
+                      await registerUser(result['front']);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please select ID image')),
+                      );
+                    }
                   }
                 },
-                label: "Register",
+                label: "Next",
               ),
               const SizedBox(height: 30),
               Row(
