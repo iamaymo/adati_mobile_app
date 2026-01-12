@@ -1,4 +1,5 @@
 import 'package:adati_mobile_app/components/product_dialog.dart';
+import 'package:adati_mobile_app/pages/setting_page.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -160,8 +161,7 @@ class _HomePageState extends State<HomePage> {
       case 1:
         return const CartPage();
       case 2:
-        // return const FavoritePage();
-        return const OldHomePage();
+        return const FavoritePage();
       case 3:
         return const ProfilePage(); // 👈 تم ربط صفحة البروفايل هنا
       default:
@@ -323,6 +323,16 @@ class _HomePageState extends State<HomePage> {
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
           ],
+        ),
+
+        IconButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SettingsPage()),
+            );
+          },
+          icon: const Icon(Icons.settings_outlined, size: 28),
         ),
       ],
     );
