@@ -52,51 +52,62 @@ class _CartPageState extends State<CartPage> {
                       separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemBuilder: (context, idx) {
                         final p = items[idx];
-                        return Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFF8E1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              Image.network(
-                                p.image,
-                                height: 56,
-                                width: 56,
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(Icons.broken_image, size: 30),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      p.title,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      "${p.price}, per hour",
-                                      style: const TextStyle(
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
+                        return GestureDetector(
+                          // عند الضغط على المنتج في السلة، يتم استدعاء الدالة showProductDialog
+                          onTap: () {
+                            showProductDialog(
+                              context,
+                              p,
+                              null, // أو مرر ID المستخدم الحالي إذا كان متوفراً لديك
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF8E1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Image.network(
+                                  p.image,
+                                  height: 56,
+                                  width: 56,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(Icons.broken_image, size: 30),
                                 ),
-                              ),
-                              IconButton(
-                                onPressed: () => Cart.instance.removeAt(idx),
-                                icon: const Icon(
-                                  Icons.delete,
-                                  color: Colors.red,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        p.title,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        "${p.price}, per hour",
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                                IconButton(
+                                  onPressed: () => Cart.instance.removeAt(idx),
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: Colors.red,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       },
@@ -129,7 +140,7 @@ class _CartPageState extends State<CartPage> {
                         ),
                       ),
                       Text(
-                        '\$${Cart.instance.totalPrice().toStringAsFixed(2)}',
+                        'YER ${Cart.instance.totalPrice().toStringAsFixed(0)}',
                         style: const TextStyle(
                           color: Colors.black,
                           fontWeight: FontWeight.bold,
