@@ -1,4 +1,5 @@
 import 'package:adati_mobile_app/components/my_textfield.dart';
+import 'package:adati_mobile_app/pages/password_changed_page.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -24,9 +25,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       ).showSnackBar(const SnackBar(content: Text("Passwords do not match")));
       return;
     }
-    print(
-      "Sending to server - Email: ${widget.email}, Pass: ${_passController.text}",
-    );
+    // print(
+    //   "Sending to server - Email: ${widget.email}, Pass: ${_passController.text}",
+    // );
     setState(() => _isLoading = true);
 
     try {
@@ -39,14 +40,16 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         }),
       );
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Password updated successfully!"),
-            backgroundColor: Colors.green,
-          ),
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   const SnackBar(
+        //     content: Text("Password updated successfully!"),
+        //     backgroundColor: Colors.green,
+        //   ),
+        // );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => PasswordChangedPage()),
         );
-        // Go back to Login Screen
-        Navigator.popUntil(context, (route) => route.isFirst);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

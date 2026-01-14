@@ -125,11 +125,9 @@ class _VerificationPageState extends State<VerificationPage> {
         ),
         onChanged: (value) {
           if (value.isNotEmpty && index < 5) {
-            FocusScope.of(context).nextFocus(); // للانتقال للمربع التالي
+            FocusScope.of(context).nextFocus();
           } else if (value.isEmpty && index > 0) {
-            FocusScope.of(
-              context,
-            ).previousFocus(); // للعودة للمربع السابق عند الحذف
+            FocusScope.of(context).previousFocus();
           }
         },
       ),

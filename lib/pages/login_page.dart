@@ -1,15 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
-// الاستيرادات الخاصة بك
 import 'package:adati_mobile_app/pages/forget_password_page.dart';
 import '/components/my_button.dart';
 import '/components/back_button.dart';
 import '/components/h1_text.dart';
 import '/components/my_textfield.dart';
 import '/pages/register_page.dart';
-import '/pages/home_page.dart'; // 👈 استيراد الصفحة الرئيسية
+import '/pages/home_page.dart';
 import 'package:adati_mobile_app/services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
@@ -21,17 +19,12 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  // 1. تعريف المتحكمات لاستخراج النصوص
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  // دالة تسجيل الدخول
   Future<void> loginUser() async {
-    // التحقق من صحة المدخلات محلياً أولاً
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    // عنوان الـ API (تأكد من استخدام IP جهازك إذا كنت تجرب على جوال حقيقي)
     const String url = 'http://10.0.2.2:8000/api/token/';
 
     try {
@@ -45,35 +38,21 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (response.statusCode == 200) {
-        // نجاح تسجيل الدخول
-        final data = jsonDecode(response.body);
-
-        // حالياً سنطبع التوكن فقط (سنقوم بحفظه لاحقاً في SharedPreferences)
-        print("Access Token: ${data['access']}");
+        // final data = jsonDecode(response.body);
+        // print("Access Token: ${data['access']}");
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
-
-          // حفظ التوكن الحقيقي القادم من السيرفر
           await AuthService.saveToken(data['access']);
         }
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Login Successful!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          // الانتقال للصفحة الرئيسية
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const HomePage()),
           );
         }
       } else {
-        print("Error Body: ${response.body}");
-        // فشل تسجيل الدخول (بيانات خاطئة)
+        // print("Error Body: ${response.body}");
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -84,7 +63,6 @@ class _LoginPageState extends State<LoginPage> {
         }
       }
     } catch (e) {
-      // خطأ في الاتصال بالخادم
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -96,14 +74,16 @@ class _LoginPageState extends State<LoginPage> {
   String? _emailValidator(String? value) {
     if (value == null || value.trim().isEmpty) return 'Please enter your email';
     final pattern = r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,4}$';
-    if (!RegExp(pattern).hasMatch(value.trim()))
+    if (!RegExp(pattern).hasMatch(value.trim())) {
       return 'Please enter a valid email';
+    }
     return null;
   }
 
   String? _passwordValidator(String? value) {
-    if (value == null || value.trim().isEmpty)
+    if (value == null || value.trim().isEmpty) {
       return 'Please enter your password';
+    }
     return null;
   }
 
@@ -125,21 +105,20 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   children: [
                     MyTextField(
-                      controller: _emailController, // 👈 ربط المتحكم
+                      controller: _emailController,
                       label: "Enter your email",
                       validator: _emailValidator,
                     ),
                     const SizedBox(height: 15),
                     MyTextFieldWS(
-                      controller: _passwordController, // 👈 ربط المتحكم
+                      controller: _passwordController,
                       label: "Enter your password",
                       validator: _passwordValidator,
-                      obscureText: true, // تأكد من وجود خاصية إخفاء الباسورد
+                      obscureText: true,
                     ),
                   ],
                 ),
               ),
-              // ... (زر Forget Password كما هو في كودك)
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
@@ -161,12 +140,8 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 20),
-              MyButton(
-                onPressed: loginUser, // 👈 استدعاء الدالة هنا
-                label: "Login",
-              ),
+              MyButton(onPressed: loginUser, label: "Login"),
               const SizedBox(height: 30),
-              // ... (رابط Register Now كما هو في كودك)
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

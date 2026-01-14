@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:adati_mobile_app/components/my_button.dart';
 import 'package:adati_mobile_app/pages/login_page.dart';
 import 'package:adati_mobile_app/pages/register_page.dart';

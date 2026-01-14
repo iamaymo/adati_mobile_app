@@ -87,8 +87,8 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                       );
                     },
                     style: ButtonStyle(
-                      padding: MaterialStateProperty.all(EdgeInsets.zero),
-                      minimumSize: MaterialStateProperty.all(Size(0, 0)),
+                      padding: WidgetStateProperty.all(EdgeInsets.zero),
+                      minimumSize: WidgetStateProperty.all(Size(0, 0)),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       alignment: Alignment.centerLeft,
                     ),

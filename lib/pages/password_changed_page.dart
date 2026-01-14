@@ -19,7 +19,7 @@ class _PasswordChangedPageState extends State<PasswordChangedPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset( 
+              Image.asset(
                 "images/check.png",
                 height: MediaQuery.of(context).size.height * 0.18,
                 fit: BoxFit.contain,
@@ -37,8 +37,7 @@ class _PasswordChangedPageState extends State<PasswordChangedPage> {
                 width: double.infinity,
                 child: MyButton(
                   onPressed: () {
-                    // navigate back to login or pop
-                    Navigator.of(context).pop();
+                    Navigator.popUntil(context, (route) => route.isFirst);
                   },
                   label: "Back to Login",
                 ),
