@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:adati_mobile_app/pages/home_page.dart';
-import 'package:adati_mobile_app/pages/user_getaway.dart'; 
+import 'package:adati_mobile_app/pages/user_getaway.dart';
 import 'package:adati_mobile_app/services/auth_service.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  String? token = await AuthService.getToken();
-  
-  bool hasToken = token != null && token.isNotEmpty;
+    String? token = await AuthService.getToken();
 
-  runApp(MyApp(isLoggedIn: hasToken));
+    bool hasToken = token != null && token.isNotEmpty;
+
+    runApp(MyApp(isLoggedIn: hasToken));
+  } catch (e) {
+    print(e);
+    runApp(const MyApp(isLoggedIn: false));
+  }
 }
 
 class MyApp extends StatelessWidget {

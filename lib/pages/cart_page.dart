@@ -52,6 +52,9 @@ class _CartPageState extends State<CartPage> {
                       separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemBuilder: (context, idx) {
                         final p = items[idx];
+                        final imageUrl = (p.images.isNotEmpty
+                            ? p.images[0]
+                            : '');
                         return GestureDetector(
                           // عند الضغط على المنتج في السلة، يتم استدعاء الدالة showProductDialog
                           onTap: () {
@@ -69,14 +72,29 @@ class _CartPageState extends State<CartPage> {
                             ),
                             child: Row(
                               children: [
-                                Image.network(
-                                  p.image,
-                                  height: 56,
-                                  width: 56,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(Icons.broken_image, size: 30),
-                                ),
+                                imageUrl.isNotEmpty
+                                    ? Image.network(
+                                        imageUrl,
+                                        height: 56,
+                                        width: 56,
+                                        fit: BoxFit.contain,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                const Icon(
+                                                  Icons.broken_image,
+                                                  size: 30,
+                                                ),
+                                      )
+                                    : const SizedBox(
+                                        height: 56,
+                                        width: 56,
+                                        child: Center(
+                                          child: Icon(
+                                            Icons.broken_image,
+                                            size: 30,
+                                          ),
+                                        ),
+                                      ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(

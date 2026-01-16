@@ -23,7 +23,7 @@ class _Product {
   final int id;
   final String title;
   final String price;
-  final String image;
+  final List<String> images; // 👈 تغيير من String لـ List<String>
   final int ownerId;
   final String owner;
   final String description;
@@ -32,27 +32,45 @@ class _Product {
     required this.id,
     required this.title,
     required this.price,
-    required this.image,
+    required this.images, // 👈 تعديل هنا
     required this.ownerId,
     required this.owner,
     required this.description,
   });
 
   factory _Product.fromJson(Map<String, dynamic> json) {
-    // حل مشكلة تحويل السعر من 3000.00 إلى 3000
+    // 1. معالجة السعر
     String formattedPrice = "0";
     if (json['Tool_Price'] != null) {
       double? priceDouble = double.tryParse(json['Tool_Price'].toString());
-      formattedPrice = priceDouble?.toInt().toString() ?? "0";
+      formattedPrice = priceDouble?.round().toString() ?? "0";
     }
+
+    // 2. جلب الصور من حقل all_pictures القادم من السيرفر
+    List<String> collectedImages = [];
+
+    if (json['all_pictures'] != null && json['all_pictures'] is List) {
+      // نأخذ القائمة الجاهزة من السيرفر مباشرة
+      collectedImages = List<String>.from(
+        json['all_pictures'].map((url) => url.toString()),
+      );
+    } else {
+      // حل احتياطي في حال فشل all_pictures
+      if (json['Tool_Picture'] != null) {
+        collectedImages.add(json['Tool_Picture']);
+      }
+    }
+
+    // 3. طباعة للتأكد (اختياري)
+    print(
+      "المنتج: ${json['Tool_Name']} - الصور النهائية: ${collectedImages.length}",
+    );
 
     return _Product(
       id: json['Tool_ID'] ?? 0,
       title: json['Tool_Name'] ?? "No Name",
       price: formattedPrice,
-      image: json['Tool_Picture'].startsWith('http')
-          ? json['Tool_Picture']
-          : 'http://10.0.2.2:8000${json['Tool_Picture']}',
+      images: collectedImages, // 👈 تمرير القائمة المعبأة بالكامل
       ownerId: json['User_ID'] ?? 0,
       owner: json['owner_name'] ?? "Unknown",
       description:
@@ -117,6 +135,7 @@ class _HomePageState extends State<HomePage> {
       );
 
       if (response.statusCode == 200) {
+        print("البيانات الخام من السيرفر: ${response.body}");
         // فك تشفير البيانات ودعم اللغة العربية
         List<dynamic> data = json.decode(utf8.decode(response.bodyBytes));
 
@@ -247,8 +266,8 @@ class _HomePageState extends State<HomePage> {
             ownerId: product.ownerId,
             id: product.id,
             title: product.title,
-            price: "${product.price}",
-            image: product.image,
+            price: product.price,
+            images: product.images,
             description: product.description,
           ),
           currentUserId,
@@ -268,7 +287,7 @@ class _HomePageState extends State<HomePage> {
                   top: Radius.circular(20),
                 ),
                 child: Image.network(
-                  product.image,
+                  product.images.isNotEmpty ? product.images.first : '',
                   fit: BoxFit.cover,
                   width: double.infinity,
                   errorBuilder: (context, error, stackTrace) =>
@@ -325,14 +344,27 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
 
-        IconButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const SettingsPage()),
-            );
-          },
-          icon: const Icon(Icons.settings_outlined, size: 28),
+        Row(
+          children: [
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsPage()),
+                );
+              },
+              icon: const Icon(Icons.stacked_bar_chart, size: 28),
+            ),
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsPage()),
+                );
+              },
+              icon: const Icon(Icons.settings_outlined, size: 28),
+            ),
+          ],
         ),
       ],
     );
@@ -376,6 +408,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           Icon(
             icon,
+            size: 25,
             color: isSelected
                 ? Theme.of(context).colorScheme.primary
                 : Colors.grey,
@@ -386,7 +419,7 @@ class _HomePageState extends State<HomePage> {
               color: isSelected
                   ? Theme.of(context).colorScheme.primary
                   : Colors.grey,
-              fontSize: 10,
+              fontSize: 13,
             ),
           ),
         ],

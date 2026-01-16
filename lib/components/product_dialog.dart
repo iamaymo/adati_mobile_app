@@ -10,7 +10,7 @@ class Product {
   final int ownerId;
   final String title;
   final String price;
-  final String image;
+  final List<String> images; // changed to multiple images
   final String description;
   final double rating;
   final int reviews;
@@ -20,7 +20,7 @@ class Product {
     required this.ownerId,
     required this.title,
     required this.price,
-    required this.image,
+    required this.images,
     required this.description,
     this.rating = 5.0,
     this.reviews = 0,
@@ -67,12 +67,20 @@ class _ProductDialogContent extends StatefulWidget {
 
 class _ProductDialogContentState extends State<_ProductDialogContent> {
   bool isFavorite = false;
+  late final PageController _pageController;
+  int _currentPage = 0;
 
   @override
   void initState() {
     super.initState();
-
+    _pageController = PageController(initialPage: 0);
     checkIfFavorite();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   // التحقق من حالة المفضلة عند فتح الديالوج
@@ -121,6 +129,7 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
   }
 
   void _showFullScreenImage(BuildContext context) {
+    final images = widget.product.images;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => Scaffold(
@@ -134,16 +143,158 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
             ),
           ),
           body: Center(
-            child: InteractiveViewer(
-              panEnabled: true,
-              minScale: 0.5,
-              maxScale: 4.0,
-              child: Image.network(
-                widget.product.image,
-                fit: BoxFit.contain,
-                width: double.infinity,
-                height: double.infinity,
-              ),
+            child: StatefulBuilder(
+              builder: (context, setStateFull) {
+                final pageCtrl = PageController(initialPage: _currentPage);
+                return Stack(
+                  children: [
+                    PageView.builder(
+                      controller: pageCtrl,
+                      itemCount: images.isNotEmpty ? images.length : 1,
+                      onPageChanged: (p) {
+                        setStateFull(() {});
+                      },
+                      itemBuilder: (ctx, idx) {
+                        if (images.isEmpty) {
+                          return const Center(
+                            child: Icon(
+                              Icons.broken_image,
+                              size: 80,
+                              color: Colors.white,
+                            ),
+                          );
+                        }
+                        return InteractiveViewer(
+                          panEnabled: true,
+                          minScale: 0.5,
+                          maxScale: 4.0,
+                          child: Image.network(
+                            images[idx],
+                            fit: BoxFit.contain,
+                            width: double.infinity,
+                            height: double.infinity,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
+                                  Icons.broken_image,
+                                  size: 80,
+                                  color: Colors.white,
+                                ),
+                          ),
+                        );
+                      },
+                    ),
+                    // left arrow
+                    Positioned(
+                      left: 8,
+                      top: 0,
+                      bottom: 0,
+                      child: FutureBuilder(
+                        future: Future.value(true),
+                        builder: (_, __) {
+                          final visible =
+                              (pageCtrl.hasClients
+                                  ? pageCtrl.page?.round() ?? _currentPage
+                                  : _currentPage) >
+                              0;
+                          return Visibility(
+                            visible: visible,
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.arrow_back_ios,
+                                color: Colors.white,
+                              ),
+                              onPressed: () {
+                                final cur = pageCtrl.hasClients
+                                    ? (pageCtrl.page?.round() ?? _currentPage)
+                                    : _currentPage;
+                                if (cur > 0)
+                                  pageCtrl.previousPage(
+                                    duration: const Duration(milliseconds: 200),
+                                    curve: Curves.easeInOut,
+                                  );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    // right arrow
+                    Positioned(
+                      right: 8,
+                      top: 0,
+                      bottom: 0,
+                      child: FutureBuilder(
+                        future: Future.value(true),
+                        builder: (_, __) {
+                          final cur = pageCtrl.hasClients
+                              ? (pageCtrl.page?.round() ?? _currentPage)
+                              : _currentPage;
+                          final visible = images.isNotEmpty
+                              ? cur < (images.length - 1)
+                              : false;
+                          return Visibility(
+                            visible: visible,
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.arrow_forward_ios,
+                                color: Colors.white,
+                              ),
+                              onPressed: () {
+                                final cur2 = pageCtrl.hasClients
+                                    ? (pageCtrl.page?.round() ?? _currentPage)
+                                    : _currentPage;
+                                if (images.isNotEmpty &&
+                                    cur2 < images.length - 1) {
+                                  pageCtrl.nextPage(
+                                    duration: const Duration(milliseconds: 200),
+                                    curve: Curves.easeInOut,
+                                  );
+                                }
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    // dots indicator
+                    if (images.isNotEmpty)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 24,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            images.length,
+                            (i) => AnimatedBuilder(
+                              animation: pageCtrl,
+                              builder: (context, child) {
+                                final page = pageCtrl.hasClients
+                                    ? (pageCtrl.page ??
+                                          pageCtrl.initialPage.toDouble())
+                                    : pageCtrl.initialPage.toDouble();
+                                final selected = (page.round() == i);
+                                return Container(
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
+                                  width: selected ? 10 : 6,
+                                  height: selected ? 10 : 6,
+                                  decoration: BoxDecoration(
+                                    color: selected
+                                        ? Colors.white
+                                        : Colors.white54,
+                                    shape: BoxShape.circle,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                  ], // نهاية Stack children
+                );
+              }, // نهاية Builder
             ),
           ),
         ),
@@ -153,6 +304,7 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
 
   @override
   Widget build(BuildContext context) {
+    final images = widget.product.images;
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
@@ -174,7 +326,7 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                     child: const Icon(Icons.arrow_back, color: Colors.white),
                   ),
                   GestureDetector(
-                    onTap: toggleFavorite, // استدعاء دالة السيرفر
+                    onTap: toggleFavorite,
                     child: Icon(
                       isFavorite ? Icons.favorite : Icons.favorite_border,
                       color: isFavorite ? Colors.red : Colors.white,
@@ -185,21 +337,125 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
               ),
               const SizedBox(height: 8),
 
-              // صورة المنتج
+              // منطقة صور المنتج - تم تعديل الـ Stack هنا
               GestureDetector(
                 onTap: () => _showFullScreenImage(context),
-                child: Center(
+                child: SizedBox(
+                  height: 220, // زيادة الارتفاع قليلاً ليكون أوضح
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      widget.product.image,
-                      height: 180,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                        Icons.broken_image,
-                        size: 80,
-                        color: Colors.white,
-                      ),
+                    child: Stack(
+                      children: [
+                        // 1. عرض الصور (PageView)
+                        PageView.builder(
+                          controller: _pageController,
+                          itemCount: images.isNotEmpty ? images.length : 1,
+                          onPageChanged: (p) {
+                            setState(() {
+                              _currentPage = p;
+                            });
+                          },
+                          itemBuilder: (ctx, idx) {
+                            if (images.isEmpty) {
+                              return const Center(
+                                child: Icon(
+                                  Icons.broken_image,
+                                  size: 80,
+                                  color: Colors.white,
+                                ),
+                              );
+                            }
+                            return Image.network(
+                              images[idx],
+                              fit: BoxFit.contain,
+                              width: double.infinity,
+                              // إضافة Loading Indicator لكل صورة
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return const Center(
+                                      child: CircularProgressIndicator(),
+                                    );
+                                  },
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(
+                                    Icons.broken_image,
+                                    size: 80,
+                                    color: Colors.white,
+                                  ),
+                            );
+                          },
+                        ),
+
+                        // 2. سهم التنقل لليسار
+                        if (images.length > 1 && _currentPage > 0)
+                          Positioned(
+                            left: 0,
+                            top: 0,
+                            bottom: 0,
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.arrow_back_ios_rounded,
+                                color: Colors.white70,
+                              ),
+                              onPressed: () {
+                                _pageController.previousPage(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              },
+                            ),
+                          ),
+
+                        // 3. سهم التنقل لليمين
+                        if (images.length > 1 &&
+                            _currentPage < images.length - 1)
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            bottom: 0,
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                color: Colors.white70,
+                              ),
+                              onPressed: () {
+                                _pageController.nextPage(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              },
+                            ),
+                          ),
+
+                        // 4. مؤشر النقاط (Dots)
+                        if (images.length > 1)
+                          Positioned(
+                            bottom: 10,
+                            left: 0,
+                            right: 0,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(
+                                images.length,
+                                (index) => AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
+                                  height: 8,
+                                  width: _currentPage == index ? 12 : 8,
+                                  decoration: BoxDecoration(
+                                    color: _currentPage == index
+                                        ? Colors.white
+                                        : Colors.white38,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),

@@ -153,7 +153,6 @@ class _IdcardImagePickerState extends State<IdcardImagePicker> {
           'ID Card Image',
           style: TextStyle(color: Colors.black),
         ),
-        backgroundColor: Theme.of(context).colorScheme.primary,
         centerTitle: true,
         elevation: 0,
         leading: const BackButton(color: Colors.black),
@@ -190,16 +189,16 @@ class _IdcardImagePickerState extends State<IdcardImagePicker> {
                 width: double.infinity,
                 height: 50,
                 child: MyButton(
-                  // Return the front image path to previous screen when available
                   onPressed: _isFormValid
                       ? () {
+                          // نغلق الصفحة ونعيد مسارات الصور لصفحة الـ Register
                           Navigator.pop(context, {
                             'front': _frontImagePath,
                             'back': _backImagePath,
                           });
                         }
-                      : null,
-                  label: 'Register',
+                      : null, // الزر يكون معطل حتى يختار الصورة
+                  label: 'Continue', // غيرنا النص ليكون أنسب للمرحلة التالية
                 ),
               ),
               const SizedBox(height: 12),
@@ -314,16 +313,33 @@ class _IdcardImagePickerState extends State<IdcardImagePicker> {
         SizedBox(
           width: double.infinity,
           height: 50,
-          child: ElevatedButton(
-            onPressed: () => _showPickOptions(target),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFBC02D),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          child: Container(
+            height: 45, // يمكنك التحكم في الطول
+            child: CustomPaint(
+              painter: _DashedBorderPainter(
+                color: const Color(0xFFFBC02D), // اللون الأصفر
+                strokeWidth: 2,
+                borderRadius: 12,
               ),
-              elevation: 0,
+              child: TextButton(
+                onPressed: () => _showPickOptions(target),
+                style: TextButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    'Change',
+                    style: TextStyle(
+                      color: Color(0xFFFBC02D), // النص باللون الأصفر أيضاً
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
             ),
-            child: const Text('Change', style: TextStyle(color: Colors.white)),
           ),
         ),
       ],

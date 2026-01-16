@@ -1,3 +1,5 @@
+import 'package:adati_mobile_app/pages/user_getaway.dart';
+import 'package:adati_mobile_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -9,35 +11,29 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   int _selectedIndex = 3;
-  
-  // التعريفات اللونية الأساسية من الملفات السابقة
   static const Color yellow = Color(0xFFFBC02D);
   static const Color darkGray = Color(0xFF6B6B6B);
+
+  void logout() async {
+    await AuthService.removeToken(); // حذف التوكن
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const UserGatewayPage()),
+        (route) => false, // يحذف كل الصفحات السابقة من الذاكرة
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
         leading: const BackButton(color: Colors.black),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: OutlinedButton.icon(
-              onPressed: () {
-                // وظيفة التعديل العام
-              },
-              icon: const Icon(Icons.edit_note, size: 18, color: Colors.black),
-              label: const Text('Edit Profile', style: TextStyle(color: Colors.black)),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Colors.black26),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-            ),
-          ),
-        ],
+        title: Text("Settings"),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -45,93 +41,97 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // قسم الصورة الشخصية مع تأثير الوهج (من Setting1 و Setting2)
-              Center(
-                child: Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: yellow.withOpacity(0.4),
-                            blurRadius: 30,
-                            spreadRadius: 2,
-                          )
-                        ],
-                      ),
-                      child: const CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.white,
-                        child: CircleAvatar(
-                          radius: 46,
-                          backgroundImage: NetworkImage('https://via.placeholder.com/150'),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    const Text(
-                      'Sayaf Al-Ameri',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      'Active since - June 2025',
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                    ),
-                  ],
-                ),
-              ),
+              // // قسم الصورة الشخصية مع تأثير الوهج (من Setting1 و Setting2)
+              // Center(
+              //   child: Column(
+              //     children: [
+              //       Container(
+              //         padding: const EdgeInsets.all(6),
+              //         decoration: BoxDecoration(
+              //           shape: BoxShape.circle,
+              //           boxShadow: [
+              //             BoxShadow(
+              //               color: yellow.withOpacity(0.4),
+              //               blurRadius: 30,
+              //               spreadRadius: 2,
+              //             )
+              //           ],
+              //         ),
+              //         child: const CircleAvatar(
+              //           radius: 50,
+              //           backgroundColor: Colors.white,
+              //           child: CircleAvatar(
+              //             radius: 46,
+              //             backgroundImage: NetworkImage('https://via.placeholder.com/150'),
+              //           ),
+              //         ),
+              //       ),
+              //       const SizedBox(height: 15),
+              //       const Text(
+              //         'Sayaf Al-Ameri',
+              //         style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              //       ),
+              //       Text(
+              //         'Active since - June 2025',
+              //         style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+              //       ),
+              //     ],
+              //   ),
+              // ),
 
-              const SizedBox(height: 30),
+              // const SizedBox(height: 30),
 
-              // قسم المعلومات الشخصية (بأسلوب البطاقات التفاعلية من Setting2)
-              const Text(
-                'Personal Information',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: darkGray),
-              ),
-              const SizedBox(height: 12),
-              _InfoTile(
-                icon: Icons.email_outlined,
-                label: 'Email',
-                value: 'aymanqadasi89@gmail.com',
-                onEdit: () {},
-              ),
-              _InfoTile(
-                icon: Icons.phone_android,
-                label: 'Phone',
-                value: '+967 770-000-777',
-                onEdit: () {},
-              ),
-              _InfoTile(
-                icon: Icons.location_on_outlined,
-                label: 'Location',
-                value: 'Yemen, Sana\'a',
-                onEdit: () {},
-              ),
+              // // قسم المعلومات الشخصية (بأسلوب البطاقات التفاعلية من Setting2)
+              // const Text(
+              //   'Personal Information',
+              //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: darkGray),
+              // ),
+              // const SizedBox(height: 12),
+              // _InfoTile(
+              //   icon: Icons.email_outlined,
+              //   label: 'Email',
+              //   value: 'aymanqadasi89@gmail.com',
+              //   onEdit: () {},
+              // ),
+              // _InfoTile(
+              //   icon: Icons.phone_android,
+              //   label: 'Phone',
+              //   value: '+967 770-000-777',
+              //   onEdit: () {},
+              // ),
+              // _InfoTile(
+              //   icon: Icons.location_on_outlined,
+              //   label: 'Location',
+              //   value: 'Yemen, Sana\'a',
+              //   onEdit: () {},
+              // ),
 
-              const SizedBox(height: 25),
+              // const SizedBox(height: 25),
 
-              // قسم الإحصائيات (بألوان DarkGray لتباين احترافي)
-              const Text(
-                'Activity Overview',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: darkGray),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(child: _StatBox(title: 'Posts', value: '20', color: yellow)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _StatBox(title: 'Stars', value: '55', color: darkGray)),
-                ],
-              ),
+              // // قسم الإحصائيات (بألوان DarkGray لتباين احترافي)
+              // const Text(
+              //   'Activity Overview',
+              //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: darkGray),
+              // ),
+              // const SizedBox(height: 12),
+              // Row(
+              //   children: [
+              //     Expanded(child: _StatBox(title: 'Posts', value: '20', color: yellow)),
+              //     const SizedBox(width: 12),
+              //     Expanded(child: _StatBox(title: 'Stars', value: '55', color: darkGray)),
+              //   ],
+              // ),
 
-              const SizedBox(height: 25),
+              // const SizedBox(height: 25),
 
               // زر الإعدادات والمزيد
-              const Text(
+              Text(
                 'System',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: darkGray),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
               ),
               const SizedBox(height: 12),
               _ActionMenu(
@@ -145,25 +145,19 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: 'Privacy & Security',
                 onTap: () {},
               ),
-              
+              const SizedBox(height: 10),
+
+              _ActionMenu(
+                icon: Icons.logout,
+                title: 'Log out',
+                onTap: logout,
+                color: Colors.red,
+              ),
+
               const SizedBox(height: 30),
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (i) => setState(() => _selectedIndex = i),
-        selectedItemColor: yellow,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        showSelectedLabels: true,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined), label: 'Cart'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: 'Favorite'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
       ),
     );
   }
@@ -176,7 +170,12 @@ class _InfoTile extends StatelessWidget {
   final String value;
   final VoidCallback onEdit;
 
-  const _InfoTile({required this.icon, required this.label, required this.value, required this.onEdit});
+  const _InfoTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.onEdit,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -195,8 +194,17 @@ class _InfoTile extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-              Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+              Text(
+                label,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
           const Spacer(),
@@ -216,7 +224,11 @@ class _StatBox extends StatelessWidget {
   final String value;
   final Color color;
 
-  const _StatBox({required this.title, required this.value, required this.color});
+  const _StatBox({
+    required this.title,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -226,13 +238,27 @@ class _StatBox extends StatelessWidget {
         color: color,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
-          BoxShadow(color: color.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))
+          BoxShadow(
+            color: color.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
         children: [
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-          Text(title, style: const TextStyle(color: Colors.white, fontSize: 13)),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            title,
+            style: const TextStyle(color: Colors.white, fontSize: 13),
+          ),
         ],
       ),
     );
@@ -244,8 +270,14 @@ class _ActionMenu extends StatelessWidget {
   final IconData icon;
   final String title;
   final VoidCallback onTap;
+  final Color color;
 
-  const _ActionMenu({required this.icon, required this.title, required this.onTap});
+  const _ActionMenu({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    this.color = const Color(0xFFFBC02D),
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -255,15 +287,20 @@ class _ActionMenu extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFFFBC02D).withOpacity(0.1),
+          color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           children: [
-            Icon(icon, color: const Color(0xFFFBC02D)),
+            Icon(icon, color: color),
             const SizedBox(width: 15),
-            Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.w600))),
-            const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFFFBC02D)),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 14, color: color),
           ],
         ),
       ),
