@@ -1,4 +1,5 @@
 import 'package:adati_mobile_app/components/product_dialog.dart';
+import 'package:adati_mobile_app/pages/operations_page.dart';
 import 'package:adati_mobile_app/pages/setting_page.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -80,6 +81,54 @@ class _Product {
 }
 
 class _HomePageState extends State<HomePage> {
+  void _checkAccess(VoidCallback onAuthorized) {
+    if (currentUserId == null) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.black, // خلفية سوداء
+          title: Text(
+            "Access Denied",
+            style: TextStyle(color: Theme.of(context).colorScheme.tertiary),
+          ),
+          content: Text(
+            "You need to log in to access this feature.",
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.tertiary,
+              fontSize: 16,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.primary, // زر أساسي
+              ),
+              child: const Text(
+                "Login or Register",
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      onAuthorized();
+    }
+  }
+
   int bottomNavIndex = 0;
   String userName = "User";
   bool isLoading = true;
@@ -101,7 +150,11 @@ class _HomePageState extends State<HomePage> {
   Future<void> fetchUserData() async {
     final token = await AuthService.getToken();
     if (token == null) {
-      _handleLogout();
+      setState(() {
+        userName = "Guest";
+        currentUserId = null; // لا يوجد ID للمستخدم الزائر
+        isLoading = false;
+      });
       return;
     }
     try {
@@ -123,15 +176,15 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> fetchTools() async {
     final token = await AuthService.getToken();
-    if (token == null) return;
+    Map<String, String> headers = {'Content-Type': 'application/json'};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
 
     try {
       final response = await http.get(
         Uri.parse('http://10.0.2.2:8000/api/tools/'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -195,11 +248,13 @@ class _HomePageState extends State<HomePage> {
       body: _getSelectedPage(),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddToolPost()),
-          );
-          fetchTools();
+          _checkAccess(() async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AddToolPost()),
+            );
+            fetchTools();
+          });
         },
         backgroundColor: Theme.of(context).colorScheme.secondary,
         shape: const CircleBorder(),
@@ -260,18 +315,20 @@ class _HomePageState extends State<HomePage> {
   Widget _buildProductCard(_Product product) {
     return GestureDetector(
       onTap: () {
-        showProductDialog(
-          context,
-          Product(
-            ownerId: product.ownerId,
-            id: product.id,
-            title: product.title,
-            price: product.price,
-            images: product.images,
-            description: product.description,
-          ),
-          currentUserId,
-        );
+        _checkAccess(() {
+          showProductDialog(
+            context,
+            Product(
+              ownerId: product.ownerId,
+              id: product.id,
+              title: product.title,
+              price: product.price,
+              images: product.images,
+              description: product.description,
+            ),
+            currentUserId,
+          );
+        });
       },
       child: Container(
         decoration: BoxDecoration(
@@ -348,19 +405,27 @@ class _HomePageState extends State<HomePage> {
           children: [
             IconButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SettingsPage()),
-                );
+                _checkAccess(() {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const OperationsPage(),
+                    ),
+                  );
+                });
               },
               icon: const Icon(Icons.stacked_bar_chart, size: 28),
             ),
             IconButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SettingsPage()),
-                );
+                _checkAccess(() {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsPage(),
+                    ),
+                  );
+                });
               },
               icon: const Icon(Icons.settings_outlined, size: 28),
             ),
@@ -402,7 +467,16 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildNavItem(IconData icon, String label, bool isSelected, int idx) {
     return GestureDetector(
-      onTap: () => setState(() => bottomNavIndex = idx),
+      onTap: () => {
+        if (idx == 0)
+          {setState(() => bottomNavIndex = idx)}
+        else
+          {
+            _checkAccess(() {
+              setState(() => bottomNavIndex = idx);
+            }),
+          },
+      },
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

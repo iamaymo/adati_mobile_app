@@ -1,4 +1,5 @@
 import 'package:adati_mobile_app/components/my_button.dart';
+import 'package:adati_mobile_app/pages/home_page.dart';
 import 'package:adati_mobile_app/pages/legal_and_policies.dart';
 import 'package:adati_mobile_app/pages/login_page.dart';
 import 'package:adati_mobile_app/pages/register_page.dart';
@@ -93,10 +94,10 @@ class _UserGatewayPageState extends State<UserGatewayPage> {
                     SizedBox(height: 20),
                     TextButton(
                       onPressed: () {
-                        Navigator.push(
+                        Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => LegalPoliciesPage(),
+                            builder: (context) => HomePage(),
                           ),
                         );
                       },
