@@ -1,3 +1,4 @@
+import 'package:adati_mobile_app/components/product_dialog.dart';
 import 'package:adati_mobile_app/pages/rental_summary_Page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/services.dart';
 Future<void> showPaymentMethodSheet(
   BuildContext context, {
   required double amount,
+  required List<dynamic> selectedTools,
   required VoidCallback onPaid,
 }) {
   int step = 1;
@@ -21,6 +23,10 @@ Future<void> showPaymentMethodSheet(
     {'name': 'One Cash Wallet', 'asset': 'images/one_cash.png'},
     {'name': 'Jaib Wallet', 'asset': 'images/jaib.png'},
   ];
+  bool isYemeniPhoneValid(String phone) {
+    final regex = RegExp(r'^7[0137][0-9]{7}$');
+    return regex.hasMatch(phone);
+  }
 
   return showModalBottomSheet(
     context: context,
@@ -274,31 +280,34 @@ Future<void> showPaymentMethodSheet(
                           if (step == 1) {
                             step = 2;
                           } else if (step == 2) {
-                            if (phoneController.text.length == 9) {
+                            if (isYemeniPhoneValid(phoneController.text)) {
                               step = 3;
                               errorMessage = null;
                             } else {
-                              errorMessage = "Phone number must be 9 digits";
+                              errorMessage =
+                                  "Invalid Phone number. Must start with 77,71,73,70) and be 9 Numbers.";
                             }
                           } else if (step == 3) {
                             String enteredOtp = otpControllers
                                 .map((e) => e.text)
                                 .join();
                             if (enteredOtp == "000000") {
-                              Navigator.of(context).pop(); // إغلاق الشيت
+                              Navigator.pop(context);
 
-                              // الانتقال لصفحة ملخص الإيجار
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      const RentalSummaryPage(),
+                                  builder: (context) => RentalSummaryPage(
+                                    amount: amount,
+                                    walletName:
+                                        wallets[selectedWallet]['name']!,
+                                    phoneNumber: phoneController.text,
+                                    tools: List<Product>.from(selectedTools),
+                                  ),
                                 ),
                               );
-
-                              onPaid(); // استدعاء الدالة الأصلية إذا كنت لا تزال بحتاجها
                             } else {
-                              errorMessage = "Invalid code. Please use 000000";
+                              errorMessage = "Invalid OTP. Use 000000";
                             }
                           }
                         });
@@ -311,10 +320,8 @@ Future<void> showPaymentMethodSheet(
                         ),
                       ),
                       child: Text(
-                        step == 3
-                            ? 'Next'
-                            : 'Next', // تم تغيير النص ليكون Next في الحالتين بناءً على طلبك
-                        style: const TextStyle(
+                        "Next",
+                        style: TextStyle(
                           color: Colors.black,
                           fontWeight: FontWeight.bold,
                           fontSize: 16,

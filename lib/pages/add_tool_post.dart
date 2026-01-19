@@ -122,7 +122,7 @@ class _AddToolPostState extends State<AddToolPost> {
                   ),
                   const SizedBox(height: 20),
 
-                  _buildLabel('Rental Price (Numbers Only) *'),
+                  _buildLabel('Rental Price (Per Day) *'),
                   TextFormField(
                     controller: _priceController,
                     onChanged: (value) =>

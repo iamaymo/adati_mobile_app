@@ -1,4 +1,5 @@
 import 'package:adati_mobile_app/components/payment_sheet.dart';
+import 'package:adati_mobile_app/pages/rental_summary_Page.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -305,6 +306,9 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
   @override
   Widget build(BuildContext context) {
     final images = widget.product.images;
+    final double amount = double.tryParse(widget.product.price) ?? 0.0;
+    final String selectedWalletName = "Wallet";
+    final String userPhone = "000000000";
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
@@ -626,15 +630,25 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                               onTap: () {
                                 showPaymentMethodSheet(
                                   context,
-                                  amount: 0,
+                                  amount: amount,
                                   onPaid: () {
                                     Navigator.of(context).pop();
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Payment successful'),
+                                    Navigator.of(context).pop();
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => RentalSummaryPage(
+                                          amount: amount,
+                                          walletName: selectedWalletName,
+                                          phoneNumber: userPhone,
+                                          tools: [
+                                            widget.product,
+                                          ], // تمرير الأداة الحالية
+                                        ),
                                       ),
                                     );
                                   },
+                                  selectedTools: [widget.product],
                                 );
                               },
                               child: Container(

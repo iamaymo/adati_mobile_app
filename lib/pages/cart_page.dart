@@ -109,7 +109,7 @@ class _CartPageState extends State<CartPage> {
                                       ),
                                       const SizedBox(height: 6),
                                       Text(
-                                        "${p.price}, per hour",
+                                        "${p.price}, per Day",
                                         style: const TextStyle(
                                           color: Colors.grey,
                                         ),
@@ -184,13 +184,9 @@ class _CartPageState extends State<CartPage> {
                               showPaymentMethodSheet(
                                 context,
                                 amount: Cart.instance.totalPrice(),
+                                selectedTools: items,
                                 onPaid: () {
                                   Cart.instance.clear();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Payment successful'),
-                                    ),
-                                  );
                                 },
                               );
                             },

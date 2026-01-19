@@ -1,188 +1,212 @@
+import 'package:adati_mobile_app/components/product_dialog.dart';
 import 'package:flutter/material.dart';
+import '../components/cart.dart';
 import 'home_page.dart';
 
 class RentalSummaryPage extends StatelessWidget {
-  const RentalSummaryPage({Key? key}) : super(key: key);
+  final double amount;
+  final String walletName;
+  final String phoneNumber;
+  final List<Product> tools;
+
+  const RentalSummaryPage({
+    Key? key,
+    required this.amount,
+    required this.walletName,
+    required this.phoneNumber,
+    required this.tools,
+  }) : super(key: key);
 
   static const Color _primary = Color(0xFFFFC72C);
-
   @override
   Widget build(BuildContext context) {
-    final maxContentWidth = 900.0;
-
-    // sample data (UI-only)
-    const toolName = 'Cordless Drill';
-    const toolDesc = 'High-performance cordless drill suitable for home and professional tasks. Lightweight with long battery life.';
-    const imageAsset = 'images/adati_logo.png';
-    final startDate = DateTime.now();
-    final endDate = DateTime.now().add(const Duration(days: 3));
-    final days = endDate.difference(startDate).inDays;
-    const pricePerDay = 50.0; // currency-agnostic for UI
-    const deliveryFee = 10.0;
-    final totalPrice = pricePerDay * days + deliveryFee;
-
-    Widget card(Widget child) => Container(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFF8E1),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6, offset: const Offset(0, 2))],
-          ),
-          child: child,
-        );
-
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: maxContentWidth),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(children: [
-                        IconButton(
-                          icon: const Icon(Icons.chevron_left_rounded),
-                          onPressed: () => Navigator.of(context).maybePop(),
-                        ),
-                        const SizedBox(width: 6),
-                        const Text('Rental Summary', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                      ]),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
+      appBar: AppBar(title: Text("Rental Summary"), centerTitle: true),
+      body: Padding(
+        padding: const EdgeInsets.only(
+          left: 15,
+          right: 15,
+          top: 15,
+          bottom: 25,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // content
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ...tools.map((product) => _buildToolCard(product)).toList(),
 
-                  // content
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Tool Information Card
-                          card(Row(
-                            children: [
-                              Container(
-                                width: 96,
-                                height: 96,
-                                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-                                child: Image.asset(imageAsset, fit: BoxFit.contain),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [
-                                    Text(toolName, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-                                    SizedBox(height: 8),
-                                    Text(toolDesc, style: TextStyle(color: Colors.black87, height: 1.3)),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          )),
+                    const SizedBox(height: 10),
 
-                          // Rental Duration
-                          card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            const Text('Rental Duration', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                            const SizedBox(height: 10),
-                            Row(children: [
-                              Expanded(child: Text('Start: ${_formatDate(startDate)}', style: TextStyle(color: Colors.grey.shade800))),
-                              Expanded(child: Text('End: ${_formatDate(endDate)}', style: TextStyle(color: Colors.grey.shade800))),
-                            ]),
-                            const SizedBox(height: 8),
-                            Text('Total days: $days', style: TextStyle(color: Colors.grey.shade700)),
-                          ])),
+                    // تفاصيل الدفع والمحفظة
+                    _buildInfoCard("Payment Details", [
+                      _buildRow("Wallet", walletName),
+                      _buildRow("Wallet Phone Number", phoneNumber),
+                      _buildRow("Rental Duration", "1 Day"),
+                    ]),
 
-                          // Price Breakdown
-                          card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            const Text('Price Breakdown', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                            const SizedBox(height: 10),
-                            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                              Text('Price per day', style: TextStyle(color: Colors.grey.shade800)),
-                              Text('${_formatCurrency(pricePerDay)} x $days', style: TextStyle(color: Colors.grey.shade800)),
-                            ]),
-                            const SizedBox(height: 8),
-                            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                              Text('Delivery fee', style: TextStyle(color: Colors.grey.shade800)),
-                              Text(_formatCurrency(deliveryFee), style: TextStyle(color: Colors.grey.shade800)),
-                            ]),
-                            const Divider(height: 20, thickness: 1),
-                            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                              const Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                              Text(_formatCurrency(totalPrice), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                            ]),
-                          ])),
-
-                          // Late return warning
-                          Container(
-                            margin: const EdgeInsets.symmetric(vertical: 8),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.red.shade50,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: Colors.red.shade100),
-                            ),
-                            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Icon(Icons.error_outline, color: Colors.red.shade700),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  'Late return policy: Extra charges apply for late returns (e.g., 10 PLN per extra day). Please return the tool on time to avoid fees.',
-                                  style: TextStyle(color: Colors.red.shade700, height: 1.3),
-                                ),
-                              )
-                            ]),
-                          ),
-
-                          const SizedBox(height: 24),
-                        ],
+                    // تفاصيل السعر
+                    _buildInfoCard("Price Breakdown", [
+                      _buildRow(
+                        "Total Amount",
+                        "YER ${amount.toStringAsFixed(0)}",
+                        isBold: true,
                       ),
-                    ),
-                  ),
+                    ]),
 
-                  // Proceed to payment button
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // UI-only: normally proceed to payment flow
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const HomePage()));
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _primary,
-                          foregroundColor: Colors.black,
-                          elevation: 2,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        ),
-                        child: const Text('Proceed to Payment', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                ],
+                    // تحذير السياسة
+                    _buildPolicyWarning(),
+                  ],
+                ),
               ),
             ),
-          ),
+
+            // Proceed to payment button
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const HomePage()),
+                      (route) => false,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _primary,
+                    foregroundColor: Colors.black,
+                    elevation: 2,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    'Proceed to Payment',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
         ),
       ),
     );
   }
 
-  String _formatDate(DateTime d) => '${d.year}-${_two(d.month)}-${_two(d.day)}';
-  String _two(int v) => v.toString().padLeft(2, '0');
-  String _formatCurrency(double v) => '\${v.toStringAsFixed(2)}';
-}
+  // الدوال المساعدة تم نقلها لداخل الكلاس ليتم التعرف عليها
+  Widget _buildToolCard(Product p) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF8E1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: p.images.isNotEmpty
+                ? Image.network(
+                    p.images[0],
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                  )
+                : Container(
+                    width: 60,
+                    height: 60,
+                    color: Colors.grey.shade200,
+                    child: const Icon(Icons.image_not_supported),
+                  ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  p.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  "YER ${p.price} / Day",
+                  style: const TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-// preview runner
-void main() {
-  runApp(const MaterialApp(debugShowCheckedModeBanner: false, home: RentalSummaryPage()));
+  Widget _buildInfoCard(String title, List<Widget> children) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          const Divider(),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRow(String label, String value, {bool isBold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.black54)),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPolicyWarning() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.red.shade100),
+      ),
+      child: const Text(
+        'Late return policy: Extra charges apply. Please return tools on time.',
+        style: TextStyle(color: Colors.red, fontSize: 15),
+      ),
+    );
+  }
 }
