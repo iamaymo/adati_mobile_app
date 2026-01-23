@@ -119,8 +119,11 @@ class _ProfilePageState extends State<ProfilePage> {
                               backgroundColor: Colors.white,
                               child: CircleAvatar(
                                 radius: 46,
-                                backgroundImage: AssetImage(
-                                  'images/avatar.png',
+                                backgroundColor: Colors.grey,
+                                child: Icon(
+                                  Icons.person,
+                                  size: 50,
+                                  color: Colors.black,
                                 ),
                               ),
                             ),
@@ -166,8 +169,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           const SizedBox(width: 15),
                           // زر Stars (تم ربطه الآن بصفحة RentedToolsPage)
                           _StatBox(
-                            title: 'Stars',
-                            value: '55',
+                            title: 'My Orders',
+                            value: '##',
                             color: _bgYellow,
                             onTap: () {
                               Navigator.push(

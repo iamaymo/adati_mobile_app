@@ -1,5 +1,11 @@
+import 'dart:convert';
+import 'dart:math';
+
 import 'package:adati_mobile_app/components/product_dialog.dart';
+import 'package:adati_mobile_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../components/cart.dart';
 import 'home_page.dart';
 
@@ -18,6 +24,84 @@ class RentalSummaryPage extends StatelessWidget {
   }) : super(key: key);
 
   static const Color _primary = Color(0xFFFFC72C);
+  Future<void> _submitOrder(BuildContext context) async {
+    final String? token = await AuthService.getToken();
+
+    if (token == null || token.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final String transactionRef = (Random().nextInt(9000) + 1000).toString();
+
+    // إظهار مؤشر التحميل
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    bool allSuccess = true;
+
+    for (var product in tools) {
+      try {
+        final response = await http.post(
+          Uri.parse('http://10.0.2.2:8000/api/orders/'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({
+            'Tool_ID': product.id,
+            'Total_Price': product.price,
+            'Wallet_Name': walletName,
+            'Wallet_Phone_Number': phoneNumber,
+            'Transaction_Ref': transactionRef,
+          }),
+        );
+
+        if (response.statusCode != 201) {
+          allSuccess = false;
+          debugPrint("Django Error: ${response.body}");
+          break;
+        }
+      } catch (e) {
+        allSuccess = false;
+        debugPrint("Connection Error: $e");
+        break;
+      }
+    }
+
+    // إغلاق نافذة التحميل
+    if (Navigator.canPop(context)) Navigator.pop(context);
+
+    if (allSuccess) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("تم إرسال الطلب بنجاح!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const HomePage()),
+        (route) => false,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("حدث خطأ أثناء معالجة الطلب"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,7 +112,7 @@ class RentalSummaryPage extends StatelessWidget {
           left: 15,
           right: 15,
           top: 15,
-          bottom: 25,
+          bottom: 30,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,11 +157,7 @@ class RentalSummaryPage extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => const HomePage()),
-                      (route) => false,
-                    );
+                    _submitOrder(context);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _primary,
@@ -89,7 +169,7 @@ class RentalSummaryPage extends StatelessWidget {
                     ),
                   ),
                   child: const Text(
-                    'Proceed to Payment',
+                    'Rental Confirmation',
                     style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                   ),
                 ),
