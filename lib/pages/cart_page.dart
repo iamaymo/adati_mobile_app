@@ -1,4 +1,8 @@
+import 'dart:convert';
+
+import 'package:adati_mobile_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../components/cart.dart';
 import '../components/product_dialog.dart';
 import '../components/payment_sheet.dart'; // added
@@ -12,6 +16,43 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
+  Future<void> _processCheckout(List<Product> items) async {
+    final String? token = await AuthService.getToken();
+    final String url = 'http://10.0.2.2:8000/api/orders/';
+
+    int successCount = 0;
+
+    for (var product in items) {
+      try {
+        final response = await http.post(
+          Uri.parse(url),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({
+            'Tool_ID': product.id, // تأكد أن موديل Product يحتوي على id
+            // السيرفر سيتولى حساب السعر والتواريخ في perform_create
+          }),
+        );
+
+        if (response.statusCode == 201 || response.statusCode == 200) {
+          successCount++;
+        }
+      } catch (e) {
+        debugPrint("Error renting tool ${product.title}: $e");
+      }
+    }
+
+    if (successCount > 0) {
+      Cart.instance.clear();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Successfully rented $successCount tools!")),
+      );
+      // يمكنك هنا التوجيه لصفحة "طلباتي"
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -180,13 +221,13 @@ class _CartPageState extends State<CartPage> {
                       onPressed: items.isEmpty
                           ? null
                           : () {
-                              // show payment sheet and checkout on pay
                               showPaymentMethodSheet(
                                 context,
                                 amount: Cart.instance.totalPrice(),
                                 selectedTools: items,
-                                onPaid: () {
-                                  Cart.instance.clear();
+                                onPaid: () async {
+                                  // بدلاً من clear فقط، سنقوم بالإرسال للسيرفر
+                                  await _processCheckout(items);
                                 },
                               );
                             },

@@ -77,6 +77,34 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
     }
   }
 
+  Future<void> _handleRefresh() async {
+    await _fetchOrderDetails(); // جلب البيانات الحقيقية من السيرفر
+  }
+
+  Future<void> _fetchOrderDetails() async {
+    final String orderId = currentOrder['Order_ID'].toString();
+    final String url = 'http://10.0.2.2:8000/api/orders/$orderId/';
+
+    try {
+      final String? token = await AuthService.getToken();
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          currentOrder = jsonDecode(response.body);
+        });
+      }
+    } catch (e) {
+      debugPrint("Refresh failed: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,20 +125,24 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
           onPressed: () => Navigator.pop(context, true),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              _buildInfoCard(),
-              const SizedBox(height: 16),
-              _buildProgressCard(),
-              const SizedBox(height: 16),
-              _buildFinancialCard(),
-              const SizedBox(height: 24),
-              // الزر الديناميكي حسب الحالة
-              _buildBottomActionButton(),
-            ],
+      body: RefreshIndicator(
+        onRefresh: _handleRefresh,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                _buildInfoCard(),
+                const SizedBox(height: 16),
+                _buildProgressCard(),
+                const SizedBox(height: 16),
+                _buildFinancialCard(),
+                const SizedBox(height: 24),
+                // الزر الديناميكي حسب الحالة
+                _buildBottomActionButton(),
+              ],
+            ),
           ),
         ),
       ),
@@ -201,7 +233,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
         "val": currentOrder['is_return_requested'] ?? false,
       },
       {
-        "title": "Return in Transit",
+        "title": "Handed Back to Delivery",
         "val": currentOrder['is_return_handed_to_delivery'] ?? false,
       },
       {"title": "Finished", "val": currentOrder['Order_Status'] == 'Completed'},
@@ -274,7 +306,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
           color: Colors.red,
         );
       }
-      if (status == 'On_The_Way') {
+      if (status == 'On The Way') {
         return _actionBtn(
           "Confirmation of Receipt of The Tool",
           () => _updateStatus('Ongoing', {'is_received_by_customer': true}),

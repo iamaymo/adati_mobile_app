@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
-import 'my_tools.dart';
+import 'my_tools_page.dart';
 import 'rented_tools.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -152,10 +152,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       // Stats Section
                       Row(
                         children: [
-                          // زر Posts
                           _StatBox(
                             title: 'Posts',
-                            value: '20',
+                            value: 'My Tools',
                             color: Colors.grey.shade800,
                             onTap: () {
                               Navigator.push(
@@ -169,9 +168,10 @@ class _ProfilePageState extends State<ProfilePage> {
                           const SizedBox(width: 15),
                           // زر Stars (تم ربطه الآن بصفحة RentedToolsPage)
                           _StatBox(
-                            title: 'My Orders',
-                            value: '##',
+                            title: 'Orders',
+                            value: 'My Rented Tools',
                             color: _bgYellow,
+                            
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -246,7 +246,7 @@ class _StatBox extends StatelessWidget {
                 value,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 22,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),

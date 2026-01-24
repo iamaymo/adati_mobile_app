@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:adati_mobile_app/services/auth_service.dart';
 
-// تعريف الـ Extension بشكل صحيح خارج الكلاس
 extension PriceFormatter on double {
   String toPriceString() => this.toStringAsFixed(0);
 }
@@ -57,59 +56,84 @@ class RequestDetailsPage extends StatelessWidget {
         double.tryParse(order['Owner_Amount']?.toString() ?? '0') ?? 0;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("تفاصيل الطلب"), centerTitle: true),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text(
+          "Request Details",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // صورة الأداة
+            // Tool Image
             if (order['tool_image'] != null)
               Container(
                 width: double.infinity,
                 height: 200,
-                margin: const EdgeInsets.only(bottom: 20),
+                margin: const EdgeInsets.only(bottom: 25),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 15,
+                    ),
+                  ],
                   image: DecorationImage(
                     image: NetworkImage(order['tool_image']),
-                    fit: BoxFit.cover,
+                    fit: BoxFit.contain,
                   ),
                 ),
               ),
 
-            _buildSectionTitle("بيانات الأداة"),
-            _buildInfoRow("اسم الأداة", order['tool_name']),
-            _buildInfoRow("المبلغ المدفوع", "YER ${total.toPriceString()}"),
+            // Tool Information Section
+            _buildSectionHeader("Tool Information"),
+            _buildInfoBox([
+              _buildInfoRow("Tool Name", order['tool_name']),
+              _buildInfoRow("Total Paid", "YER ${total.toPriceString()}"),
+            ]),
 
-            const Divider(height: 40),
+            const SizedBox(height: 20),
 
-            _buildSectionTitle("بيانات العميل"),
-            _buildInfoRow("الاسم", order['customer_name']),
-            _buildInfoRow("المحفظة", order['Wallet_Name']),
-            _buildInfoRow("رقم الهاتف", order['Wallet_Phone_Number']),
-            _buildAddressRow(
-              "العنوان",
-              "${order['customer_address'] ?? ''}, ${order['customer_street'] ?? ''}",
-            ),
+            // Customer Information Section
+            _buildSectionHeader("Customer Details"),
+            _buildInfoBox([
+              _buildInfoRow("Name", order['customer_name']),
+              _buildInfoRow("Wallet", order['Wallet_Name']),
+              _buildInfoRow("Phone", order['Wallet_Phone_Number']),
+              _buildAddressRow(
+                "Address",
+                "${order['customer_address'] ?? ''}, ${order['customer_street'] ?? ''}",
+              ),
+            ]),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
 
-            // بطاقة الأرباح
+            // Earnings Card
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: Colors.green.shade200),
+                color: Colors.green.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.green.withOpacity(0.2)),
               ),
               child: Column(
                 children: [
                   const Text(
-                    "أرباحك من هذا الطلب",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    "Your Earnings from this request",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.green,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -124,35 +148,51 @@ class RequestDetailsPage extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
 
-            // الأزرار
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _updateOrderStatus(context, "Accepted"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
+            // Action Buttons
+            Container(
+              margin: const EdgeInsets.only(bottom: 15),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _updateOrderStatus(context, "Accepted"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFFC72C),
+                        foregroundColor: Colors.black,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const Text(
+                        "Accept Request",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
-                    child: const Text("قبول الطلب"),
                   ),
-                ),
-                const SizedBox(width: 15),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => _updateOrderStatus(context, "Rejected"),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      side: const BorderSide(color: Colors.red),
-                      padding: const EdgeInsets.symmetric(vertical: 15),
+                  const SizedBox(width: 15),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => _updateOrderStatus(context, "Rejected"),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        side: const BorderSide(color: Colors.red),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const Text(
+                        "Reject",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
-                    child: const Text("رفض"),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -160,13 +200,13 @@ class RequestDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         title,
         style: const TextStyle(
-          fontSize: 18,
+          fontSize: 16,
           fontWeight: FontWeight.bold,
           color: Colors.orange,
         ),
@@ -174,16 +214,31 @@ class RequestDetailsPage extends StatelessWidget {
     );
   }
 
+  // المربع الرمادي الشفاف الذي يجمع المعلومات
+  Widget _buildInfoBox(List<Widget> children) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.06), // خلفية رمادية خفيفة جداً
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(children: children),
+    );
+  }
+
   Widget _buildInfoRow(String label, String? value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey.shade700)),
           Text(
-            value ?? "غير متوفر",
-            style: const TextStyle(fontWeight: FontWeight.w600),
+            label,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 15),
+          ),
+          Text(
+            value ?? "N/A",
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
           ),
         ],
       ),
@@ -192,17 +247,21 @@ class RequestDetailsPage extends StatelessWidget {
 
   Widget _buildAddressRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey.shade700)),
-          const SizedBox(width: 10),
+          Text(
+            label,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+          ),
+          const SizedBox(width: 20),
           Expanded(
             child: Text(
-              (value.trim() == "," || value.isEmpty) ? "غير متوفر" : value,
-              textAlign: TextAlign.end,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              (value.trim() == "," || value.isEmpty) ? "N/A" : value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
             ),
           ),
         ],

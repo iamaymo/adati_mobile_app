@@ -3,7 +3,7 @@ import 'package:adati_mobile_app/pages/order_tracking_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
-import 'request_details_page.dart'; 
+import 'request_details_page.dart';
 
 class OperationsPage extends StatefulWidget {
   const OperationsPage({super.key});
@@ -13,10 +13,8 @@ class OperationsPage extends StatefulWidget {
 }
 
 class _OperationsPageState extends State<OperationsPage> {
-  // دالة جلب الطلبات من السيرفر
   Future<List<dynamic>> _getReceivedOrders() async {
     final String? token = await AuthService.getToken();
-
     final response = await http.get(
       Uri.parse('http://10.0.2.2:8000/api/orders/?role=incoming'),
       headers: {
@@ -46,7 +44,7 @@ class _OperationsPageState extends State<OperationsPage> {
         elevation: 0,
       ),
       body: RefreshIndicator(
-        onRefresh: () async => setState(() {}), // سحب الشاشة لتحديث البيانات
+        onRefresh: () async => setState(() {}),
         child: FutureBuilder<List<dynamic>>(
           future: _getReceivedOrders(),
           builder: (context, snapshot) {
@@ -59,13 +57,32 @@ class _OperationsPageState extends State<OperationsPage> {
               return const Center(child: Text("No rental requests yet"));
             }
 
-            return ListView.builder(
+            // --- منطق الفرز هنا ---
+            final allOrders = snapshot.data!;
+            final activeOrders = allOrders
+                .where((o) => o['Order_Status'] != 'Completed')
+                .toList();
+            final completedOrders = allOrders
+                .where((o) => o['Order_Status'] == 'Completed')
+                .toList();
+
+            return ListView(
               padding: const EdgeInsets.all(16),
-              itemCount: snapshot.data!.length,
-              itemBuilder: (context, index) {
-                final order = snapshot.data![index];
-                return _buildOrderCard(order);
-              },
+              children: [
+                // أولاً: الطلبات النشطة
+                ...activeOrders.map((order) => _buildOrderCard(order)).toList(),
+
+                // ثانياً: الفاصل (يظهر فقط إذا كان هناك طلبات مكتملة)
+                if (completedOrders.isNotEmpty) ...[
+                  _buildSectionDivider("Completed"),
+                  const SizedBox(height: 12),
+                ],
+
+                // ثالثاً: الطلبات المكتملة
+                ...completedOrders
+                    .map((order) => _buildOrderCard(order))
+                    .toList(),
+              ],
             );
           },
         ),
@@ -73,32 +90,60 @@ class _OperationsPageState extends State<OperationsPage> {
     );
   }
 
+  // ويدجت الفاصل مع النص في المنتصف
+  Widget _buildSectionDivider(String label) {
+    return Row(
+      children: [
+        const Expanded(child: Divider(thickness: 1, endIndent: 10)),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey.shade500,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+        ),
+        const Expanded(child: Divider(thickness: 1, indent: 10)),
+      ],
+    );
+  }
+
   Widget _buildOrderCard(dynamic order) {
+    bool isCompleted = order['Order_Status'] == 'Completed';
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
+      elevation: isCompleted ? 0.5 : 2, // تقليل الظل للطلبات المنتهية
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: ListTile(
+        // جعل الطلبات المكتملة باهتة قليلاً للتمييز
         contentPadding: const EdgeInsets.all(12),
-        leading: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: order['tool_image'] != null
-              ? Image.network(
-                  order['tool_image'],
-                  width: 60,
-                  height: 60,
-                  fit: BoxFit.cover,
-                )
-              : Container(
-                  width: 60,
-                  height: 60,
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.build, color: Colors.grey),
-                ),
+        leading: Opacity(
+          opacity: isCompleted ? 0.6 : 1.0,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: order['tool_image'] != null
+                ? Image.network(
+                    order['tool_image'],
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                  )
+                : Container(
+                    width: 60,
+                    height: 60,
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.build, color: Colors.grey),
+                  ),
+          ),
         ),
         title: Text(
           order['tool_name'] ?? 'Unknown Tool',
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: isCompleted ? Colors.grey : Colors.black,
+          ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,10 +170,9 @@ class _OperationsPageState extends State<OperationsPage> {
         ),
         trailing: const Icon(Icons.chevron_right),
         onTap: () async {
-          // الحالات التي تفتح صفحة التتبع
           List<String> trackingStatuses = [
             'Accepted',
-            'On_The_Way',
+            'On The Way',
             'Ongoing',
             'Returning',
             'Completed',
@@ -141,22 +185,19 @@ class _OperationsPageState extends State<OperationsPage> {
             targetPage = RequestDetailsPage(order: order);
           }
 
-          // الانتقال وانتظار النتيجة (Result)
           final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => targetPage),
           );
 
-          // إذا كانت النتيجة true، نقوم بتحديث القائمة الرئيسية
           if (result == true) {
-            setState(() {}); 
+            setState(() {});
           }
         },
       ),
     );
   }
 
-  // دالة لتحديد لون الحالة
   Color _getStatusColor(String status) {
     switch (status) {
       case 'Accepted':

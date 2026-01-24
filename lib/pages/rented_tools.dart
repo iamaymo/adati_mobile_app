@@ -58,13 +58,32 @@ class _RentedToolsPageState extends State<RentedToolsPage> {
               return const Center(child: Text("No rental history found"));
             }
 
-            return ListView.builder(
+            // --- منطق الفرز للفصل بين النشط والمكتمل ---
+            final allOrders = snapshot.data!;
+            final activeOrders = allOrders
+                .where((o) => o['Order_Status'] != 'Completed')
+                .toList();
+            final completedOrders = allOrders
+                .where((o) => o['Order_Status'] == 'Completed')
+                .toList();
+
+            return ListView(
               padding: const EdgeInsets.all(16),
-              itemCount: snapshot.data!.length,
-              itemBuilder: (context, index) {
-                final order = snapshot.data![index];
-                return _buildOrderCard(order);
-              },
+              children: [
+                // أولاً: الأدوات التي استأجرتها ولا تزال نشطة
+                ...activeOrders.map((order) => _buildOrderCard(order)).toList(),
+
+                // ثانياً: الفاصل المكتوب عليه Completed
+                if (completedOrders.isNotEmpty) ...[
+                  _buildSectionDivider("Completed"),
+                  const SizedBox(height: 12),
+                ],
+
+                // ثالثاً: الأدوات التي انتهى استئجارها
+                ...completedOrders
+                    .map((order) => _buildOrderCard(order))
+                    .toList(),
+              ],
             );
           },
         ),
@@ -72,40 +91,67 @@ class _RentedToolsPageState extends State<RentedToolsPage> {
     );
   }
 
-  // هذا هو التصميم اللي طلبته (نفس OperationsPage بالضبط)
+  // ويدجت الفاصل الأنيق
+  Widget _buildSectionDivider(String label) {
+    return Row(
+      children: [
+        const Expanded(child: Divider(thickness: 1, endIndent: 10)),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey.shade500,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+        ),
+        const Expanded(child: Divider(thickness: 1, indent: 10)),
+      ],
+    );
+  }
+
   Widget _buildOrderCard(dynamic order) {
+    bool isCompleted = order['Order_Status'] == 'Completed';
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
+      elevation: isCompleted ? 0.5 : 2, // ظل خفيف جداً للمنتهي
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: ListTile(
         contentPadding: const EdgeInsets.all(12),
-        leading: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: order['tool_image'] != null
-              ? Image.network(
-                  order['tool_image'],
-                  width: 60,
-                  height: 60,
-                  fit: BoxFit.cover,
-                )
-              : Container(
-                  width: 60,
-                  height: 60,
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.build, color: Colors.grey),
-                ),
+        leading: Opacity(
+          opacity: isCompleted ? 0.6 : 1.0, // جعل الصورة باهتة في المكتمل
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: order['tool_image'] != null
+                ? Image.network(
+                    order['tool_image'],
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                  )
+                : Container(
+                    width: 60,
+                    height: 60,
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.build, color: Colors.grey),
+                  ),
+          ),
         ),
         title: Text(
           order['tool_name'] ?? 'Unknown Tool',
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: isCompleted
+                ? Colors.grey
+                : Colors.black, // تغيير لون الخط للمكتمل
+          ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 4),
-            // هنا المالك لأنك أنت المستأجر
-            Text("Owner: ${order['owner_name'] ?? 'Owner'}"), 
+            Text("Owner: ${order['owner_name'] ?? 'Owner'}"),
             const SizedBox(height: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -126,16 +172,16 @@ class _RentedToolsPageState extends State<RentedToolsPage> {
         ),
         trailing: const Icon(Icons.chevron_right),
         onTap: () async {
-          // الانتقال لصفحة التتبع (للمستأجر)
           final result = await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => OrderTrackingPage(order: order, isOwner: false),
+              builder: (context) =>
+                  OrderTrackingPage(order: order, isOwner: false),
             ),
           );
 
           if (result == true) {
-            setState(() {}); 
+            setState(() {});
           }
         },
       ),
