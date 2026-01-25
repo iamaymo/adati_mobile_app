@@ -185,8 +185,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ],
                       ),
-
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 15),
+                      Divider(color: Colors.grey,),
+                      const SizedBox(height: 15),
                       const Text(
                         'Personal Information',
                         style: TextStyle(

@@ -1,3 +1,4 @@
+import 'package:adati_mobile_app/pages/edit_tool_post.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -150,8 +151,15 @@ class _MyToolsPageState extends State<MyToolsPage> {
                     style: TextStyle(color: Colors.white),
                   ),
                   onTap: () {
-                    Navigator.of(context).pop();
-                    // كود التعديل
+                    Navigator.of(context).pop(); // إغلاق الـ BottomSheet
+
+                    // الانتقال لصفحة التعديل وتمرير بيانات الأداة الحالية (item)
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditToolPost(toolData: item),
+                      ),
+                    );
                   },
                 ),
                 // الزر الذكي المحدث
@@ -391,15 +399,22 @@ class _MyToolsPageState extends State<MyToolsPage> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _tools.isEmpty
-          ? const Center(child: Text('You haven\'t added any tools yet.'))
-          : ListView.builder(
-              padding: const EdgeInsets.all(20),
-              itemCount: _tools.length,
-              itemBuilder: (context, index) => _buildToolCard(_tools[index]),
-            ),
+      body: RefreshIndicator(
+        color: const Color(0xFFFBC02D), // لون مؤشر التحميل (نفس لون تطبيقك)
+        onRefresh: () async {
+          // هذه الدالة تستدعى عند السحب من فوق لتحت
+          await _fetchMyTools();
+        },
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _tools.isEmpty
+            ? const Center(child: Text('You haven\'t added any tools yet.'))
+            : ListView.builder(
+                padding: const EdgeInsets.all(20),
+                itemCount: _tools.length,
+                itemBuilder: (context, index) => _buildToolCard(_tools[index]),
+              ),
+      ),
     );
   }
 }
