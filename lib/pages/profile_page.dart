@@ -19,6 +19,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String phone = "Not set";
   String address = "Not set";
   bool isLoading = true;
+  String street = "street";
 
   static const Color _bgYellow = Color(0xFFFBC02D);
 
@@ -47,6 +48,7 @@ class _ProfilePageState extends State<ProfilePage> {
           phone = data['Phone_Number'] ?? "No Phone";
           address = data['User_Address'] ?? "No Address";
           isLoading = false;
+          street = data['Street'] ?? "No Street";
         });
       }
     } catch (e) {
@@ -171,7 +173,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             title: 'Orders',
                             value: 'My Rented Tools',
                             color: _bgYellow,
-                            
+
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -193,17 +195,52 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                       const SizedBox(height: 12),
-
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8, bottom: 5),
+                        child: Text(
+                          "Email:",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[800],
+                            letterSpacing: 1,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
                       _ProfileInfoTile(
                         icon: Icons.email_outlined,
                         title: email,
                       ),
                       const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8, bottom: 5),
+                        child: Text(
+                          "Phone Number:",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[800],
+                            letterSpacing: 1,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
                       _ProfileInfoTile(icon: Icons.phone_android, title: phone),
                       const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8, bottom: 5),
+                        child: Text(
+                          "Address (City, Street):",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[800],
+                            letterSpacing: 1,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
                       _ProfileInfoTile(
                         icon: Icons.location_on_outlined,
-                        title: address,
+                        title: "$address , $street",
                       ),
                       const SizedBox(height: 30),
                     ],

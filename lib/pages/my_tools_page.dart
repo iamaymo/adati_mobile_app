@@ -1,27 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:adati_mobile_app/services/auth_service.dart';
 
-class Tool {
-  final String id;
-  final String name;
-  final String priceLabel; // e.g. "YER 2500"
-  final String? imageUrl;
-  bool rented;
-
-  Tool({
-    required this.id,
-    required this.name,
-    required this.priceLabel,
-    this.imageUrl,
-    this.rented = false,
-  });
-}
-
-void main() {
-  runApp(const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: MyToolsPage(),
-  ));
-}
+// ✅ استخدام نفس الـ Model الموجود في مشروعك لضمان التوافق
+import '../components/product_dialog.dart';
 
 class MyToolsPage extends StatefulWidget {
   const MyToolsPage({Key? key}) : super(key: key);
@@ -31,70 +14,185 @@ class MyToolsPage extends StatefulWidget {
 }
 
 class _MyToolsPageState extends State<MyToolsPage> {
-  final List<Tool> _tools = [
-    Tool(id: '1', name: 'Drill', priceLabel: 'YER 2500', rented: true),
-    Tool(id: '2', name: 'Saw', priceLabel: 'YER 2500', rented: false),
-    Tool(id: '3', name: 'Stairs', priceLabel: 'YER 1500', rented: false),
-    Tool(id: '4', name: 'Lawn Mower', priceLabel: 'YER 3000', rented: true),
-    Tool(id: '5', name: 'Tools bag', priceLabel: 'YER 2000', rented: true),
-  ];
+  bool _isLoading = true;
+  List<dynamic> _tools = [];
 
-  void _showOptionsSheet(BuildContext context, int index) {
+  @override
+  void initState() {
+    super.initState();
+    _fetchMyTools();
+  }
+
+  // ✅ جلب الأدوات الخاصة بي من السيرفر
+  Future<void> _fetchMyTools() async {
+    final token = await AuthService.getToken();
+    try {
+      final response = await http.get(
+        Uri.parse(
+          'http://10.0.2.2:8000/api/my-tools/',
+        ), // تأكد من المسار في Django
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        setState(() {
+          _tools = json.decode(utf8.decode(response.bodyBytes));
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching my tools: $e");
+      setState(() => _isLoading = false);
+    }
+  }
+
+  // ✅ حذف أداة من السيرفر
+  Future<void> _deleteTool(int toolId) async {
+    final token = await AuthService.getToken();
+    try {
+      final response = await http.delete(
+        Uri.parse(
+          'http://10.0.2.2:8000/api/tools/$toolId/delete/',
+        ), // تأكد من مطابقة المسار في urls.py بـ Django
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 204 || response.statusCode == 200) {
+        // تحديث الواجهة بحذف العنصر من القائمة المحلية فوراً
+        setState(() {
+          _tools.removeWhere((t) => t['Tool_ID'] == toolId);
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Tool deleted successfully"),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      } else {
+        debugPrint("Failed to delete: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("Error deleting tool: $e");
+    }
+  }
+
+  void _showOptionsSheet(BuildContext context, Map<String, dynamic> item) {
+    // تحديد هل الأداة متاحة حالياً أم لا
+    bool isCurrentlyAvailable = item['Tool_Status'] == true;
+
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.black,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) {
         return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.edit),
-                title: const Text('Edit Tool'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _onEdit(index);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text(
-                  'Delete Tool',
-                  style: TextStyle(color: Colors.red),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[800],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _confirmDelete(index);
-                },
-              ),
-            ],
+                ListTile(
+                  leading: const Icon(Icons.edit, color: Colors.white),
+                  title: const Text(
+                    'Edit Tool',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    // كود التعديل
+                  },
+                ),
+                // الزر الذكي المحدث
+                ListTile(
+                  leading: Icon(
+                    isCurrentlyAvailable
+                        ? Icons.block
+                        : Icons.check_circle_outline,
+                    color: isCurrentlyAvailable ? Colors.orange : Colors.green,
+                  ),
+                  title: Text(
+                    isCurrentlyAvailable
+                        ? 'Make Tool Unavailable'
+                        : 'Make it Available',
+                    style: TextStyle(
+                      color: isCurrentlyAvailable
+                          ? Colors.orange
+                          : Colors.green,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    // نرسل الـ ID والحالة الحالية
+                    _toggleToolAvailability(
+                      item['Tool_ID'],
+                      isCurrentlyAvailable,
+                    );
+                  },
+                ),
+                const Divider(color: Colors.white10),
+                ListTile(
+                  leading: const Icon(Icons.delete, color: Colors.red),
+                  title: const Text(
+                    'Delete Tool',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _confirmDelete(item);
+                  },
+                ),
+              ],
+            ),
           ),
         );
       },
     );
   }
 
-  void _onEdit(int index) {
-    final tool = _tools[index];
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Edit "${tool.name}" (not implemented)')),
-    );
-  }
-
-  void _confirmDelete(int index) async {
-    final tool = _tools[index];
-    final confirmed = await showDialog<bool>(
+  void _confirmDelete(Map<String, dynamic> item) async {
+    final confirmed =
+        await showDialog<bool>(
           context: context,
           builder: (_) => AlertDialog(
-            title: const Text('Delete Tool'),
-            content: Text('Are you sure you want to delete "${tool.name}"?'),
+            backgroundColor:
+                Colors.grey[900], // جعل خلفية التنبيه داكنة لتناسب التصميم
+            title: const Text(
+              'Delete Tool',
+              style: TextStyle(color: Colors.white),
+            ),
+            content: Text(
+              'Are you sure you want to permanently delete "${item['Tool_Name']}"?',
+              style: const TextStyle(color: Colors.white70),
+            ),
             actions: [
-              TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
               TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
@@ -102,87 +200,133 @@ class _MyToolsPageState extends State<MyToolsPage> {
         false;
 
     if (confirmed) {
-      setState(() {
-        _tools.removeAt(index);
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Deleted "${tool.name}"')),
-      );
+      _deleteTool(item['Tool_ID']);
     }
   }
 
-  Widget _buildStatusBadge(bool rented) {
-    final color = rented ? Colors.red.shade600 : Colors.green.shade700;
-    final text = rented ? 'Rented' : 'Available';
+  Future<void> _toggleToolAvailability(int toolId, bool currentStatus) async {
+    final token = await AuthService.getToken();
+    try {
+      final response = await http.patch(
+        Uri.parse('http://10.0.2.2:8000/api/tools/$toolId/'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({'Tool_Status': !currentStatus}), // تحويلها لـ False
+      );
+
+      if (response.statusCode == 200) {
+        // تحديث القائمة محلياً لرؤية التغيير فوراً
+        _fetchMyTools();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              !currentStatus
+                  ? "Tool is now available"
+                  : "Tool is now unavailable",
+            ),
+            backgroundColor: !currentStatus ? Colors.green : Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint("Error updating tool status: $e");
+    }
+  }
+
+  Widget _buildStatusBadge(bool isRented) {
+    final color = isRented ? Colors.red.shade600 : Colors.green.shade700;
+    final text = isRented ? 'Unavailable' : 'Available';
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6, offset: const Offset(0, 2)),
-        ],
       ),
       child: Text(
         text,
-        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
 
-  Widget _buildToolCard(int index) {
-    final tool = _tools[index];
+  Widget _buildToolCard(Map<String, dynamic> item) {
+    // 1. معالجة السعر ليظهر كـ رقم صحيح
+    double priceDouble = double.tryParse(item['Tool_Price'].toString()) ?? 0.0;
+    String cleanPrice = priceDouble
+        .round()
+        .toString(); // استخدم round() بدلاً من toInt()
+
+    // 2. معالجة الصورة
+    String imageUrl = item['Tool_Picture'] != null
+        ? (item['Tool_Picture'].startsWith('http')
+              ? item['Tool_Picture']
+              : 'http://10.0.2.2:8000${item['Tool_Picture']}')
+        : '';
+
+    // 3. تحديد الحالة (المنطق الجديد)
+    // في Django: Tool_Status = True تعني متوفر، و False تعني مؤجر
+    // لذا نرسل "true" لـ _buildStatusBadge إذا كانت القيمة False
+    bool isRented = item['Tool_Status'] == false;
+
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF8E1),
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6, offset: const Offset(0, 2))],
       ),
       child: Row(
         children: [
-          // Image / placeholder
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: Container(
-              width: 64,
-              height: 64,
-              color: Colors.white,
-              child: tool.imageUrl != null
-                  ? Image.network(tool.imageUrl!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.build, size: 36, color: Colors.grey))
-                  : const Icon(Icons.build, size: 36, color: Colors.grey),
-            ),
+            child: imageUrl.isNotEmpty
+                ? Image.network(
+                    imageUrl,
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                  )
+                : Container(
+                    width: 60,
+                    height: 60,
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.build),
+                  ),
           ),
           const SizedBox(width: 12),
-          // Name, price and badge
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  tool.name,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  item['Tool_Name'] ?? 'No Name',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
-                  tool.priceLabel,
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+                  "YER $cleanPrice / Day",
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          // Status badge and menu
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              _buildStatusBadge(tool.rented),
-              const SizedBox(height: 6),
+              // عرض الـ Badge بناءً على الحالة
+              _buildStatusBadge(isRented),
               IconButton(
-                icon: Icon(Icons.more_vert, color: Colors.grey.shade700),
-                onPressed: () => _showOptionsSheet(context, index),
-                tooltip: 'More',
+                icon: const Icon(Icons.more_vert),
+                onPressed: () => _showOptionsSheet(context, item),
               ),
             ],
           ),
@@ -195,43 +339,26 @@ class _MyToolsPageState extends State<MyToolsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.chevron_left_rounded),
-                        onPressed: () => Navigator.of(context).maybePop(),
-                      ),
-                      const SizedBox(width: 4),
-                      const Text('My Tools', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: _tools.isEmpty
-                    ? const Center(child: Text('No tools found', style: TextStyle(fontSize: 16)))
-                    : ListView.separated(
-                        padding: const EdgeInsets.only(top: 8, bottom: 24),
-                        itemCount: _tools.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
-                        itemBuilder: (_, i) => _buildToolCard(i),
-                      ),
-              ),
-            ],
-          ),
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text(
+          'My Tools',
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      // Floating action can be added later for adding tools
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _tools.isEmpty
+          ? const Center(child: Text('You haven\'t added any tools yet.'))
+          : ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: _tools.length,
+              itemBuilder: (context, index) => _buildToolCard(_tools[index]),
+            ),
     );
   }
+}
+
+extension on double {
+  toInt() {}
 }
