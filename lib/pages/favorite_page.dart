@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:adati_mobile_app/services/auth_service.dart';
 
+// ✅ استيراد نفس ملفات السلة
+import '../components/product_dialog.dart';
+
 class FavoritePage extends StatefulWidget {
   const FavoritePage({super.key});
 
@@ -25,9 +28,7 @@ class _FavoritePageState extends State<FavoritePage> {
     final token = await AuthService.getToken();
     try {
       final response = await http.get(
-        Uri.parse(
-          'http://10.0.2.2:8000/api/favorites/',
-        ), // تأكد من المسار في السيرفر
+        Uri.parse('http://10.0.2.2:8000/api/favorites/'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
@@ -57,8 +58,31 @@ class _FavoritePageState extends State<FavoritePage> {
         fetchFavorites(); // إعادة جلب القائمة بعد الحذف
       }
     } catch (e) {
-      print("Error removing favorite: $e");
+      debugPrint("Error removing favorite: $e");
     }
+  }
+
+  // ✅ تحويل عنصر المفضلة إلى Product
+  Product _mapFavoriteToProduct(Map<String, dynamic> item) {
+    // 1. جلب السعر وتحويله لـ double أولاً للتعامل مع الأصفار
+    double priceAsDouble =
+        double.tryParse(item['Tool_Price'].toString()) ?? 0.0;
+
+    return Product(
+      id: item['Tool_ID'] ?? 0,
+      title: item['Tool_Name'] ?? 'No Name',
+
+      // 2. تحويله لـ int لإزالة الـ .00 ثم لـ String
+      price: priceAsDouble.toInt().toString(),
+
+      images: [
+        item['Tool_Picture'].startsWith('http')
+            ? item['Tool_Picture']
+            : 'http://10.0.2.2:8000${item['Tool_Picture']}',
+      ],
+      ownerId: item['Owner_ID'] ?? 0,
+      description: item['Tool_Description'] ?? '',
+    );
   }
 
   @override
@@ -105,67 +129,77 @@ class _FavoritePageState extends State<FavoritePage> {
   }
 
   Widget _buildFavoriteItem(Map<String, dynamic> item) {
-    // معالجة رابط الصورة
+   final p = _mapFavoriteToProduct(item);
     String imageUrl = item['Tool_Picture'].startsWith('http')
         ? item['Tool_Picture']
         : 'http://10.0.2.2:8000${item['Tool_Picture']}';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              imageUrl,
-              width: 70,
-              height: 70,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.broken_image),
+    return GestureDetector(
+      onTap: () {
+        final product = _mapFavoriteToProduct(item);
+        showProductDialog(context, product, null);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 15),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Color.fromARGB(99, 251, 193, 45),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
             ),
-          ),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item['Tool_Name'],
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  "YER ${item['Tool_Price']}",
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.secondary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+          ],
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                imageUrl,
+                width: 70,
+                height: 70,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.broken_image),
+              ),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.favorite, color: Colors.red),
-            onPressed: () => removeFromFavorite(item['Tool_ID']),
-          ),
-        ],
+            const SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item['Tool_Name'],
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    "YER ${p.price}",
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.secondary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.favorite, color: Colors.red),
+              onPressed: () => removeFromFavorite(item['Tool_ID']),
+            ),
+          ],
+        ),
       ),
     );
   }
+}
+
+extension on double {
+  toInt() {}
 }
