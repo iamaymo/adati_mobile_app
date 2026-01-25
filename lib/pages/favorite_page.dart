@@ -20,7 +20,10 @@ class _FavoritePageState extends State<FavoritePage> {
   @override
   void initState() {
     super.initState();
-    fetchFavorites();
+    // ترتيب المنطق: جلب المستخدم أولاً ثم جلب المفضلات
+    fetchCurrentUser().then((_) {
+      fetchFavorites();
+    });
   }
 
   // جلب المفضلات المرتبطة بالحساب من السيرفر
@@ -64,23 +67,23 @@ class _FavoritePageState extends State<FavoritePage> {
 
   // ✅ تحويل عنصر المفضلة إلى Product
   Product _mapFavoriteToProduct(Map<String, dynamic> item) {
-    // 1. جلب السعر وتحويله لـ double أولاً للتعامل مع الأصفار
+    // 3. تحويل السعر
     double priceAsDouble =
         double.tryParse(item['Tool_Price'].toString()) ?? 0.0;
+
+    // 4. استخراج ID المالك (حسب الـ Serializer الخاص بك هو User_ID داخل الأداة)
+    int ownerId = item['User_ID'] ?? 0;
 
     return Product(
       id: item['Tool_ID'] ?? 0,
       title: item['Tool_Name'] ?? 'No Name',
-
-      // 2. تحويله لـ int لإزالة الـ .00 ثم لـ String
-      price: priceAsDouble.toInt().toString(),
-
+      price: priceAsDouble.toInt().toString(), // سيحول 3000.0 إلى "3000"
       images: [
         item['Tool_Picture'].startsWith('http')
             ? item['Tool_Picture']
             : 'http://10.0.2.2:8000${item['Tool_Picture']}',
-      ],
-      ownerId: item['Owner_ID'] ?? 0,
+      ], // الصور الآن ستمر بشكل صحيح للديلوق
+      ownerId: ownerId,
       description: item['Tool_Description'] ?? '',
     );
   }
@@ -128,17 +131,47 @@ class _FavoritePageState extends State<FavoritePage> {
     );
   }
 
+  int? currentUserId;
+  // داخل FavoritePage
+  Future<void> fetchCurrentUser() async {
+    final token = await AuthService.getToken();
+    if (token == null) return;
+
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/me/'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          // تأكد أن الحقل في الـ API هو User_ID وليس id
+          currentUserId = data['User_ID'];
+        });
+        debugPrint(
+          "Current User ID Loaded: $currentUserId",
+        ); // للتأكد في الـ Console
+      }
+    } catch (e) {
+      debugPrint("Error fetching user ID: $e");
+    }
+  }
+
   Widget _buildFavoriteItem(Map<String, dynamic> item) {
-   final p = _mapFavoriteToProduct(item);
+    final p = _mapFavoriteToProduct(item);
     String imageUrl = item['Tool_Picture'].startsWith('http')
         ? item['Tool_Picture']
         : 'http://10.0.2.2:8000${item['Tool_Picture']}';
 
     return GestureDetector(
       onTap: () {
+        if (currentUserId == null) return; // safety
+
         final product = _mapFavoriteToProduct(item);
-        showProductDialog(context, product, null);
+
+        showProductDialog(context, product, currentUserId);
       },
+
       child: Container(
         margin: const EdgeInsets.only(bottom: 15),
         padding: const EdgeInsets.all(12),

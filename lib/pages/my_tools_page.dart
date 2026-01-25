@@ -16,67 +16,105 @@ class MyToolsPage extends StatefulWidget {
 class _MyToolsPageState extends State<MyToolsPage> {
   bool _isLoading = true;
   List<dynamic> _tools = [];
+  final String baseUrl = 'http://10.0.2.2:8000';
+  int? _currentUserId;
 
   @override
   void initState() {
     super.initState();
+    _loadUserId();
     _fetchMyTools();
   }
 
-  // ✅ جلب الأدوات الخاصة بي من السيرفر
+  Future<void> _loadUserId() async {
+    setState(() {
+      // _currentUserId = ['User_ID'];
+    });
+  }
+
+  String _formatImageUrl(String? path) {
+    if (path == null || path.isEmpty) return '';
+    if (path.startsWith('http')) return path;
+    return '$baseUrl$path';
+  }
+
+  Product _mapToolToProduct(Map<String, dynamic> item) {
+    return Product(
+      id: item['Tool_ID'] ?? 0,
+      title: item['Tool_Name'] ?? 'No Name',
+      price: (double.tryParse(item['Tool_Price'].toString()) ?? 0.0)
+          .round()
+          .toString(),
+      images: [_formatImageUrl(item['Tool_Picture'])],
+      ownerId: item['User_ID'] ?? 0,
+      description: item['Tool_Description'] ?? '',
+      // إذا كان الموديل يدعم الحالة، تأكد من إضافتها هنا
+      // status: item['Tool_Status'],
+    );
+  }
+
+  // 2. منطق جلب البيانات (Fetch)
   Future<void> _fetchMyTools() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true); // إظهار مؤشر التحميل عند التحديث
+
     final token = await AuthService.getToken();
     try {
       final response = await http.get(
-        Uri.parse(
-          'http://10.0.2.2:8000/api/my-tools/',
-        ), // تأكد من المسار في Django
+        Uri.parse('$baseUrl/api/my-tools/'),
         headers: {'Authorization': 'Bearer $token'},
       );
+
       if (response.statusCode == 200) {
-        setState(() {
-          _tools = json.decode(utf8.decode(response.bodyBytes));
-          _isLoading = false;
-        });
+        final List<dynamic> decodedData = json.decode(
+          utf8.decode(response.bodyBytes),
+        );
+        if (mounted) {
+          setState(() {
+            _tools = decodedData;
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoading = false);
       }
     } catch (e) {
-      debugPrint("Error fetching my tools: $e");
-      setState(() => _isLoading = false);
+      debugPrint("Fetch Error: $e");
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // ✅ حذف أداة من السيرفر
+  // 3. منطق الحذف (Delete)
   Future<void> _deleteTool(int toolId) async {
     final token = await AuthService.getToken();
     try {
       final response = await http.delete(
-        Uri.parse(
-          'http://10.0.2.2:8000/api/tools/$toolId/delete/',
-        ), // تأكد من مطابقة المسار في urls.py بـ Django
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
+        Uri.parse('$baseUrl/api/tools/$toolId/delete/'),
+        headers: {'Authorization': 'Bearer $token'},
       );
 
       if (response.statusCode == 204 || response.statusCode == 200) {
-        // تحديث الواجهة بحذف العنصر من القائمة المحلية فوراً
-        setState(() {
-          _tools.removeWhere((t) => t['Tool_ID'] == toolId);
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Tool deleted successfully"),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
-      } else {
-        debugPrint("Failed to delete: ${response.statusCode}");
+        if (mounted) {
+          setState(() {
+            // هذا السطر هو المسؤول عن اختفاء العنصر من الشاشة فوراً
+            _tools.removeWhere((t) => t['Tool_ID'] == toolId);
+          });
+        }
+        _showSuccessSnackBar("تم حذف الأداة بنجاح");
       }
     } catch (e) {
-      debugPrint("Error deleting tool: $e");
+      debugPrint("Delete Error: $e");
     }
+  }
+
+  // 4. منطق تبديل الحالة (Toggle Availability)
+
+  // دالة مساعدة للرسائل
+  void _showSuccessSnackBar(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), duration: const Duration(seconds: 2)),
+    );
   }
 
   void _showOptionsSheet(BuildContext context, Map<String, dynamic> item) {
@@ -167,6 +205,7 @@ class _MyToolsPageState extends State<MyToolsPage> {
     final confirmed =
         await showDialog<bool>(
           context: context,
+
           builder: (_) => AlertDialog(
             backgroundColor:
                 Colors.grey[900], // جعل خلفية التنبيه داكنة لتناسب التصميم
@@ -208,30 +247,30 @@ class _MyToolsPageState extends State<MyToolsPage> {
     final token = await AuthService.getToken();
     try {
       final response = await http.patch(
-        Uri.parse('http://10.0.2.2:8000/api/tools/$toolId/'),
+        Uri.parse('$baseUrl/api/tools/$toolId/'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
-        body: json.encode({'Tool_Status': !currentStatus}), // تحويلها لـ False
+        body: json.encode({'Tool_Status': !currentStatus}),
       );
 
       if (response.statusCode == 200) {
-        // تحديث القائمة محلياً لرؤية التغيير فوراً
-        _fetchMyTools();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              !currentStatus
-                  ? "Tool is now available"
-                  : "Tool is now unavailable",
-            ),
-            backgroundColor: !currentStatus ? Colors.green : Colors.orange,
-          ),
+        // بدلاً من إعادة التحميل الكاملة، نحدث العنصر في القائمة المحلية لتوفير البيانات
+        if (mounted) {
+          setState(() {
+            int index = _tools.indexWhere((t) => t['Tool_ID'] == toolId);
+            if (index != -1) {
+              _tools[index]['Tool_Status'] = !currentStatus;
+            }
+          });
+        }
+        _showSuccessSnackBar(
+          !currentStatus ? "الأداة متوفرة الآن" : "الأداة غير متوفرة",
         );
       }
     } catch (e) {
-      debugPrint("Error updating tool status: $e");
+      debugPrint("Toggle Error: $e");
     }
   }
 
@@ -274,63 +313,69 @@ class _MyToolsPageState extends State<MyToolsPage> {
     // لذا نرسل "true" لـ _buildStatusBadge إذا كانت القيمة False
     bool isRented = item['Tool_Status'] == false;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF8E1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: imageUrl.isNotEmpty
-                ? Image.network(
-                    imageUrl,
-                    width: 60,
-                    height: 60,
-                    fit: BoxFit.cover,
-                  )
-                : Container(
-                    width: 60,
-                    height: 60,
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.build),
+    return GestureDetector(
+      onTap: () {
+        showProductDialog(context, _mapToolToProduct(item), item['User_ID']);
+      },
+
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF8E1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: imageUrl.isNotEmpty
+                  ? Image.network(
+                      imageUrl,
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                    )
+                  : Container(
+                      width: 60,
+                      height: 60,
+                      color: Colors.grey[300],
+                      child: const Icon(Icons.build),
+                    ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item['Tool_Name'] ?? 'No Name',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 4),
+                  Text(
+                    "YER $cleanPrice / Day",
+                    style: const TextStyle(color: Colors.grey, fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  item['Tool_Name'] ?? 'No Name',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "YER $cleanPrice / Day",
-                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                // عرض الـ Badge بناءً على الحالة
+                _buildStatusBadge(isRented),
+                IconButton(
+                  icon: const Icon(Icons.more_vert),
+                  onPressed: () => _showOptionsSheet(context, item),
                 ),
               ],
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              // عرض الـ Badge بناءً على الحالة
-              _buildStatusBadge(isRented),
-              IconButton(
-                icon: const Icon(Icons.more_vert),
-                onPressed: () => _showOptionsSheet(context, item),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -357,8 +402,4 @@ class _MyToolsPageState extends State<MyToolsPage> {
             ),
     );
   }
-}
-
-extension on double {
-  toInt() {}
 }
