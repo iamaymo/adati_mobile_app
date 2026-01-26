@@ -1,10 +1,83 @@
+import 'package:adati_mobile_app/pages/report_problem_page.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class SupportHelpPage extends StatelessWidget {
   SupportHelpPage({super.key});
 
-  // لون الهوية البصرية
-  Color themeYellow = Color(0xFFFBC02D);
+  // لون الهوية البصرية للتطبيق
+  final Color themeYellow = const Color(0xFFFBC02D);
+
+  // --- دالة لفتح الروابط الخارجية (واتساب، تليجرام، إيميل) ---
+  Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    try {
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        throw 'Could not launch $url';
+      }
+    } catch (e) {
+      debugPrint("Error launching URL: $e");
+    }
+  }
+
+  // --- نافذة خيارات الدردشة (WhatsApp & Telegram) ---
+  void _showChatOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 15),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                "Choose Support Channel",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 25),
+              ListTile(
+                leading: const FaIcon(FontAwesomeIcons.whatsapp, color: Colors.green, size: 30),
+                title: const Text("WhatsApp Support", style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text("Immediate response for urgent issues"),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.pop(context);
+                  // استبدل الرقم بالرقم الخاص بك (كود الدولة + الرقم)
+                  _launchURL("https://wa.me/967777000000");
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.telegram, color: Colors.blue, size: 35),
+                title: const Text("Telegram Support", style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text("Chat with our community bot"),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.pop(context);
+                  // استبدل Username بمعرف التليجرام الخاص بك
+                  _launchURL("https://t.me/Your_Telegram_Username");
+                },
+              ),
+              const SizedBox(height: 15),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,20 +106,20 @@ class SupportHelpPage extends StatelessWidget {
               child: Column(
                 children: [
                   Icon(Icons.help_outline, size: 80, color: themeYellow),
-                  SizedBox(height: 16),
-                  Text(
+                  const SizedBox(height: 16),
+                  const Text(
                     "How can we help you?",
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 8),
-                  Text(
+                  const SizedBox(height: 8),
+                  const Text(
                     "Our team is here to support you 24/7",
                     style: TextStyle(color: Colors.grey),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 35),
 
             // --- خيارات التواصل السريع ---
             const Text(
@@ -60,22 +133,18 @@ class SupportHelpPage extends StatelessWidget {
                   icon: Icons.chat_bubble_outline,
                   label: "Live Chat",
                   color: Colors.blue,
-                  onTap: () {
-                    // فتح الشات المباشر
-                  },
+                  onTap: () => _showChatOptions(context),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 15),
                 _buildContactCard(
                   icon: Icons.email_outlined,
                   label: "Email",
                   color: Colors.redAccent,
-                  onTap: () {
-                    // فتح تطبيق الإيميل
-                  },
+                  onTap: () => _launchURL("mailto:support@adati.com?subject=Inquiry"),
                 ),
               ],
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 35),
 
             // --- قسم الأسئلة الشائعة FAQ ---
             const Text(
@@ -92,71 +161,14 @@ class SupportHelpPage extends StatelessWidget {
               "Please refer to our Terms & Policies. Generally, the renter is responsible for the repair costs as assessed by the owner.",
             ),
             _buildFAQTile(
-              "How can I pay for the rental?",
-              "Currently, we support cash on delivery and in-app wallet payments in some regions.",
-            ),
-            _buildFAQTile(
               "How do I cancel my request?",
-              "Go to 'My Orders', select the request, and click 'Cancel'. Please note that cancellation fees might apply if done late.",
+              "Go to 'My Orders', select the request, and click 'Cancel'.",
             ),
 
             const SizedBox(height: 40),
 
             // --- زر تقديم بلاغ رسمي ---
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.report_problem_outlined,
-                    color: Colors.orange,
-                    size: 30,
-                  ),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Found a problem?",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          "Report it to our technical team",
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Navigator.push إلى صفحة ReportProblemPage التي أنشأناها سابقاً
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: themeYellow,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text(
-                      "Report",
-                      style: TextStyle(color: Colors.black, fontSize: 12),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _buildReportBanner(context),
             const SizedBox(height: 40),
           ],
         ),
@@ -164,7 +176,7 @@ class SupportHelpPage extends StatelessWidget {
     );
   }
 
-  // ويدجت بطاقة التواصل
+  // --- ويدجت بطاقة التواصل ---
   Widget _buildContactCard({
     required IconData icon,
     required String label,
@@ -172,20 +184,24 @@ class SupportHelpPage extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return Expanded(
-      child: GestureDetector(
+      child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(15),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 20),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(15),
             border: Border.all(color: Colors.grey.withOpacity(0.1)),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))
+            ],
           ),
           child: Column(
             children: [
-              Icon(icon, color: color, size: 30),
-              const SizedBox(height: 8),
-              Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+              Icon(icon, color: color, size: 32),
+              const SizedBox(height: 10),
+              Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
         ),
@@ -193,36 +209,60 @@ class SupportHelpPage extends StatelessWidget {
     );
   }
 
-  // ويدجت السؤال والجواب (Accordion)
+  // --- ويدجت الأسئلة الشائعة ---
   Widget _buildFAQTile(String question, String answer) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(15),
       ),
       child: ExpansionTile(
-        title: Text(
-          question,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-        ),
+        title: Text(question, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
         iconColor: themeYellow,
         collapsedIconColor: Colors.grey,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-            child: Text(
-              answer,
-              style: const TextStyle(
-                color: Colors.grey,
-                fontSize: 13,
-                height: 1.5,
-              ),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Text(answer, style: const TextStyle(color: Colors.grey, height: 1.5)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- بنر التبليغ عن مشكلة ---
+  Widget _buildReportBanner(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15)],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.report_problem_outlined, color: Colors.orange, size: 35),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Found a technical issue?", style: TextStyle(fontWeight: FontWeight.bold)),
+                Text("Report it to our developers", style: TextStyle(fontSize: 12, color: Colors.grey)),
+              ],
             ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const ReportProblemPage()));
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: themeYellow,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text("Report", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ),
         ],
       ),

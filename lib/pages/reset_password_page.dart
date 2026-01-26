@@ -1,5 +1,6 @@
 import 'package:adati_mobile_app/components/my_textfield.dart';
 import 'package:adati_mobile_app/pages/password_changed_page.dart';
+import 'package:adati_mobile_app/pages/password_changed_page_home.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -48,7 +49,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         // );
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => PasswordChangedPage()),
+          MaterialPageRoute(builder: (context) => PasswordChangedPageHome()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

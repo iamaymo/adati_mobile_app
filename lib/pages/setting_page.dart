@@ -1,4 +1,6 @@
+import 'package:adati_mobile_app/pages/change_password_page.dart';
 import 'package:adati_mobile_app/pages/delete_account_pagee.dart';
+import 'package:adati_mobile_app/pages/edit_profile_page.dart';
 import 'package:adati_mobile_app/pages/report_problem_page.dart';
 import 'package:adati_mobile_app/pages/support_and_help.dart';
 import 'package:adati_mobile_app/pages/terms_and_policies.dart';
@@ -111,7 +113,12 @@ class _SettingsPageState extends State<SettingsPage> {
               _ActionMenu(
                 icon: Icons.person_outline,
                 title: 'Edit Profile',
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => EditProfilePage()),
+                  );
+                },
               ),
 
               const SizedBox(height: 10),
@@ -128,7 +135,14 @@ class _SettingsPageState extends State<SettingsPage> {
               _ActionMenu(
                 icon: Icons.lock_outline,
                 title: 'change Password',
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChangePasswordPage(),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 10),
               _ActionMenu(

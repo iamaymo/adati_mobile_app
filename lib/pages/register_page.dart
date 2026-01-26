@@ -76,60 +76,61 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   // Replace previous registerUser() with this multipart version that accepts imagePath
-  Future<void> registerUser(String imagePath) async {
+  // أضفنا مسارين للصور كباراميترز
+  Future<void> registerUser(String frontPath, String? backPath) async {
     final url = Uri.parse('$baseUrl/register/');
 
     try {
       var request = http.MultipartRequest('POST', url);
 
-      // Add text fields (field names should match backend expected names)
+      // 1. الحقول النصية
       request.fields['User_Name'] =
           "${_firstNameController.text.trim()} ${_lastNameController.text.trim()}";
       request.fields['User_Email'] = _emailController.text.trim();
       request.fields['Phone_Number'] = _phoneNumberController.text.trim();
-      request.fields['User_Address'] = _cityController.text
-          .trim(); // المدينة فقط
+      request.fields['User_Address'] = _cityController.text.trim();
       request.fields['Street'] = _districtController.text.trim();
       request.fields['password'] = _passwordController.text;
 
-      // Attach image file
+      // 2. إرفاق صورة البطاقة الأمامية (إجبارية)
       request.files.add(
-        await http.MultipartFile.fromPath('ID_Card_Image', imagePath),
+        await http.MultipartFile.fromPath('ID_Card_Image_Front', frontPath),
       );
+
+      // 3. إرفاق صورة البطاقة الخلفية (اختيارية حسب تصميمك)
+      if (backPath != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('ID_Card_Image_Back', backPath),
+        );
+      }
+
+      // ملاحظة: إذا كنت تريد رفع صورة البروفايل هنا أيضاً أضف حقل 'Profile_Image' بنفس الطريقة
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        // 1. اطبع الرد كاملاً في الـ Terminal عندك
         print("FULL SERVER RESPONSE: ${response.body}");
 
         try {
           final Map<String, dynamic> responseData = json.decode(response.body);
-
-          // 2. تأكد من اسم مفتاح التوكن (قد يكون 'access' أو 'token' أو 'token_key')
           String? token = responseData['access'] ?? responseData['token'];
 
           if (token != null) {
             await AuthService.saveToken(token);
             print("TOKEN SAVED!");
-          } else {
-            print(
-              "WARNING: No token found in response keys: ${responseData.keys}",
-            );
           }
         } catch (e) {
           print("JSON PARSE ERROR: $e");
         }
 
-        // 3. الانتقال للهوم (وضعته خارج الـ try للتأكد من حدوثه حتى لو فشل حفظ التوكن)
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const HomePage()),
           (route) => false,
         );
       } else {
-        // Show server response (may contain validation errors)
+        // عرض رسالة الخطأ من السيرفر (مهم جداً لمعرفة لو في حقل ناقص)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Registration failed: ${response.body}'),
@@ -141,9 +142,7 @@ class _RegisterPageState extends State<RegisterPage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Connection Error: Cannot reach the server at $baseUrl. $e',
-          ),
+          content: Text('Connection Error: $e'),
           backgroundColor: Colors.red.shade900,
         ),
       );
@@ -382,8 +381,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     onPressed: _isLoading
                         ? null
                         : () async {
-                            // منع الضغط المتكرر أثناء التحميل
                             if (_formKey.currentState?.validate() ?? false) {
+                              // 1. الانتقال لصفحة التقاط الصور وانتظار النتيجة
                               final dynamic imageResult = await Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -392,9 +391,11 @@ class _RegisterPageState extends State<RegisterPage> {
                                 ),
                               );
 
+                              // 2. التأكد من أن المستخدم التقط الصور (الأمامية على الأقل)
                               if (imageResult != null &&
                                   imageResult is Map &&
                                   imageResult['front'] != null) {
+                                // 3. الانتقال لصفحة السياسات والشروط
                                 final bool? isAgreed = await Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -404,23 +405,31 @@ class _RegisterPageState extends State<RegisterPage> {
                                 );
 
                                 if (isAgreed == true) {
-                                  // --- ابدأ التحميل هنا ---
                                   setState(() => _isLoading = true);
-
                                   try {
-                                    await registerUser(imageResult['front']);
+                                    // ✅ التعديل هنا: نرسل المسار الأمامي والخلفي للدالة
+                                    await registerUser(
+                                      imageResult['front'],
+                                      imageResult['back'], // قد يكون null وهذا مسموح به في الدالة
+                                    );
                                   } finally {
-                                    // نغلق التحميل في كل الأحوال (سواء نجح أو فشل)
                                     if (mounted)
                                       setState(() => _isLoading = false);
                                   }
                                 }
+                              } else {
+                                // اختياري: تنبيه المستخدم بضرورة إكمال الصور
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "Please complete the ID card photos",
+                                    ),
+                                  ),
+                                );
                               }
                             }
                           },
-                    label: _isLoading
-                        ? "Processing..."
-                        : "Next", // تغيير النص أثناء التحميل
+                    label: _isLoading ? "Processing..." : "Next",
                   ),
                   const SizedBox(height: 30),
                   Row(

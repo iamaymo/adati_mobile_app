@@ -144,6 +144,7 @@ class _IdcardImagePickerState extends State<IdcardImagePicker> {
       },
     );
   }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -193,9 +194,9 @@ class _IdcardImagePickerState extends State<IdcardImagePicker> {
                       ? () {
                           // نغلق الصفحة ونعيد مسارات الصور لصفحة الـ Register
                           Navigator.pop(context, {
-                            'front': _frontImagePath,
-                            'back': _backImagePath,
-                          });
+  'front': _frontImagePath, // المسار الذي حصلت عليه من الكاميرا
+  'back': _backImagePath,   // المسار الذي حصلت عليه من الكاميرا
+});
                         }
                       : null, // الزر يكون معطل حتى يختار الصورة
                   label: 'Continue', // غيرنا النص ليكون أنسب للمرحلة التالية
