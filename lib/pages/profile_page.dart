@@ -20,6 +20,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String address = "Not set";
   bool isLoading = true;
   String street = "street";
+  String? _networkImageUrl;
 
   static const Color _bgYellow = Color(0xFFFBC02D);
 
@@ -49,6 +50,7 @@ class _ProfilePageState extends State<ProfilePage> {
           address = data['User_Address'] ?? "No Address";
           isLoading = false;
           street = data['Street'] ?? "No Street";
+          _networkImageUrl = data['Profile_Image'];
         });
       }
     } catch (e) {
@@ -116,17 +118,32 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                               ],
                             ),
-                            child: const CircleAvatar(
+                            child: CircleAvatar(
                               radius: 52,
                               backgroundColor: Colors.white,
                               child: CircleAvatar(
                                 radius: 46,
-                                backgroundColor: Colors.grey,
-                                child: Icon(
-                                  Icons.person,
-                                  size: 50,
-                                  color: Colors.black,
-                                ),
+                                backgroundColor:
+                                    Colors.grey[300], // خلفية فاتحة للأيقونة
+                                // 1. نقوم بتحديد الصورة الخلفية هنا
+                                backgroundImage: _networkImageUrl != null
+                                    ? NetworkImage(
+                                        _networkImageUrl!.startsWith('http')
+                                            ? _networkImageUrl!.replaceAll(
+                                                '127.0.0.1',
+                                                '10.0.2.2',
+                                              )
+                                            : 'http://10.0.2.2:8000$_networkImageUrl',
+                                      )
+                                    : null,
+                                // 2. هنا نضع الشرط: إذا لا توجد صورة خلفية، أظهر الأيقونة
+                                child: _networkImageUrl == null
+                                    ? const Icon(
+                                        Icons.person,
+                                        size: 50,
+                                        color: Colors.black,
+                                      )
+                                    : null, // إذا وجدت صورة، الـ child يكون فارغاً حتى لا يغطي عليها
                               ),
                             ),
                           ),
@@ -186,7 +203,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ],
                       ),
                       const SizedBox(height: 15),
-                      Divider(color: Colors.grey,),
+                      Divider(color: Colors.grey),
                       const SizedBox(height: 15),
                       const Text(
                         'Personal Information',
