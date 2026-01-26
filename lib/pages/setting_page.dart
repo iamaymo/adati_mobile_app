@@ -1,3 +1,7 @@
+import 'package:adati_mobile_app/pages/delete_account_pagee.dart';
+import 'package:adati_mobile_app/pages/report_problem_page.dart';
+import 'package:adati_mobile_app/pages/support_and_help.dart';
+import 'package:adati_mobile_app/pages/terms_and_policies.dart';
 import 'package:adati_mobile_app/pages/user_getaway.dart';
 import 'package:adati_mobile_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
@@ -15,14 +19,68 @@ class _SettingsPageState extends State<SettingsPage> {
   static const Color darkGray = Color(0xFF6B6B6B);
 
   void logout() async {
-    await AuthService.removeToken(); // حذف التوكن
-    if (mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const UserGatewayPage()),
-        (route) => false, // يحذف كل الصفحات السابقة من الذاكرة
-      );
-    }
+    // إظهار ديالوج التأكيد أولاً
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.black, // خلفية سوداء
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+            side: const BorderSide(color: Colors.white12), // إطار خفيف جداً
+          ),
+          title: const Text(
+            "Logout",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            "Are you sure you want to log out?",
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            // زر الإلغاء
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                "Cancel",
+                style: TextStyle(color: Colors.white60),
+              ),
+            ),
+            // زر تسجيل الخروج
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () async {
+                Navigator.pop(context); // إغلاق الديالوج
+
+                await AuthService.removeToken(); // حذف التوكن
+
+                if (mounted) {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const UserGatewayPage(),
+                    ),
+                    (route) => false,
+                  );
+                }
+              },
+              child: const Text(
+                "Logout",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -42,24 +100,96 @@ class _SettingsPageState extends State<SettingsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'System',
+                'Profile Information',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.secondary,
                 ),
               ),
               const SizedBox(height: 12),
               _ActionMenu(
-                icon: Icons.settings_suggest_outlined,
-                title: 'General Settings',
+                icon: Icons.person_outline,
+                title: 'Edit Profile',
+                onTap: () {},
+              ),
+
+              const SizedBox(height: 10),
+              Text(
+                'Privacy & Security',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              _ActionMenu(
+                icon: Icons.lock_outline,
+                title: 'change Password',
                 onTap: () {},
               ),
               const SizedBox(height: 10),
               _ActionMenu(
-                icon: Icons.security_outlined,
-                title: 'Privacy & Security',
-                onTap: () {},
+                icon: Icons.delete_outline,
+                title: 'Delete Account',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DeleteAccountPage(),
+                    ),
+                  );
+                },
+                color: Colors.red,
+              ),
+              const SizedBox(height: 10),
+
+              Text(
+                'System',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _ActionMenu(
+                icon: Icons.help_outline,
+                title: 'Support & Help',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SupportHelpPage()),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+              _ActionMenu(
+                icon: Icons.description_outlined,
+                title: 'Terms & Policies',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TermsAndPoliciesPage(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+              _ActionMenu(
+                icon: Icons.report_problem_outlined,
+                title: 'Report a Problem',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ReportProblemPage(),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 10),
 
@@ -203,12 +333,12 @@ class _ActionMenu extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withOpacity(0.25),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           children: [
-            Icon(icon, color: color),
+            Icon(icon, color: Colors.black),
             const SizedBox(width: 15),
             Expanded(
               child: Text(

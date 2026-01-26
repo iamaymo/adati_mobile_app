@@ -170,9 +170,10 @@ class _OperationsPageState extends State<OperationsPage> {
         ),
         trailing: const Icon(Icons.chevron_right),
         onTap: () async {
+          print("Current Order Status: ${order['Order_Status']}");
           List<String> trackingStatuses = [
             'Accepted',
-            'On The Way',
+            'On_The_Way',
             'Ongoing',
             'Returning',
             'Completed',

@@ -306,7 +306,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
           color: Colors.red,
         );
       }
-      if (status == 'On The Way') {
+      if (status == 'On_The_Way') {
         return _actionBtn(
           "Confirmation of Receipt of The Tool",
           () => _updateStatus('Ongoing', {'is_received_by_customer': true}),
