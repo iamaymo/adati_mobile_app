@@ -1,5 +1,5 @@
 import 'package:adati_mobile_app/components/payment_sheet.dart';
-import 'package:adati_mobile_app/pages/rental_summary_Page.dart';
+import 'package:adati_mobile_app/pages/rental_summary_page.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -15,13 +15,17 @@ class Product {
   final String description;
   final double rating;
   final int reviews;
+  final double realValue;
 
-  Product({
+  Product(
+     {
+      this.realValue = 0.0,
     required this.id,
     required this.ownerId,
     required this.title,
     required this.price,
     required this.images,
+
     required this.description,
     this.rating = 5.0,
     this.reviews = 0,

@@ -143,39 +143,54 @@ class RentalSummaryPage extends StatelessWidget {
                       ),
                     ]),
 
+                    _buildInfoCard("Insurance Details", [
+                      _buildRow(
+                        "Total Tools Value",
+                        "YER ${tools.fold(0.0, (sum, p) => sum + p.realValue).toStringAsFixed(0)}",
+                      ),
+                      _buildRow("Insurance Rate", "25%"),
+                      _buildRow(
+                        "Insurance Amount",
+                        "YER ${(tools.fold(0.0, (sum, p) => sum + p.realValue) * 0.25).toStringAsFixed(0)}",
+                        isBold: true,
+                      ),
+                    ]),
+                    _buildInsuranceNote(),
                     // تحذير السياسة
                     _buildPolicyWarning(),
+
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _submitOrder(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _primary,
+                            foregroundColor: Colors.black,
+                            elevation: 2,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: const Text(
+                            'Rental Confirmation',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 20),
                   ],
                 ),
               ),
             ),
-
-            // Proceed to payment button
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    _submitOrder(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _primary,
-                    foregroundColor: Colors.black,
-                    elevation: 2,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: const Text(
-                    'Rental Confirmation',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -286,6 +301,35 @@ class RentalSummaryPage extends StatelessWidget {
       child: const Text(
         'Late return policy: Extra charges apply. Please return tools on time.',
         style: TextStyle(color: Colors.red, fontSize: 15),
+      ),
+    );
+  }
+
+  Widget _buildInsuranceNote() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.amber.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.amber.shade200),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.shield_outlined, color: Colors.amber.shade800, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'The insurance deposit will be fully refunded to your account once the tools are returned in good condition and on time.',
+              style: TextStyle(
+                color: Colors.amber.shade900,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                height: 1.4, // لجعل النص مريحاً في القراءة
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

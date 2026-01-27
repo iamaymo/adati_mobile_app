@@ -50,6 +50,17 @@ class RequestDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double toolValue =
+        double.tryParse(order['real_value']?.toString() ?? '0') ?? 0;
+    if (toolValue == 0 && order['insurance_details'] != null) {
+      toolValue =
+          double.tryParse(
+            order['insurance_details']['amount']?.toString() ?? '0',
+          ) ??
+          0;
+    }
+    double insuranceAmount = toolValue * 0.25;
+    print("Order Data from Database: ${jsonEncode(order)}");
     double total =
         double.tryParse(order['Total_Price']?.toString() ?? '0') ?? 0;
     double ownerAmount =
@@ -114,6 +125,56 @@ class RequestDetailsPage extends StatelessWidget {
               ),
             ]),
 
+            const SizedBox(height: 20),
+            // 1. حساب مبلغ الضمان برمجياً للعرض
+
+            // 2. إضافة العنوان (Section Header)
+            _buildSectionHeader("Security & Insurance"),
+
+            // 3. إضافة صندوق معلومات الضمان
+            _buildInfoBox([
+              _buildInfoRow(
+                "Insurance Amount",
+                "YER ${insuranceAmount.toPriceString()}",
+              ),
+              _buildInfoRow(
+                "Status",
+                "Held by System",
+              ), // بما أن الطلب لسه ما انقبل، الحالة محجوزة
+            ]),
+
+            const SizedBox(height: 12),
+
+            // 4. ملاحظة طمأنة للمؤجر (اختياري)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade100),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.gpp_good_outlined,
+                    color: Colors.blue.shade700,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      "This deposit is held to protect your tool against damages or late returns.",
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
             const SizedBox(height: 20),
 
             // Earnings Card

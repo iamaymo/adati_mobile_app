@@ -29,6 +29,7 @@ class _Product {
   final int ownerId;
   final String owner;
   final String description;
+  final double realValue;
 
   _Product({
     required this.id,
@@ -38,6 +39,7 @@ class _Product {
     required this.ownerId,
     required this.owner,
     required this.description,
+    required this.realValue,
   });
 
   factory _Product.fromJson(Map<String, dynamic> json) {
@@ -68,6 +70,7 @@ class _Product {
       "المنتج: ${json['Tool_Name']} - الصور النهائية: ${collectedImages.length}",
     );
 
+    double rv = double.tryParse(json['real_value']?.toString() ?? '0.0') ?? 0.0;
     return _Product(
       id: json['Tool_ID'] ?? 0,
       title: json['Tool_Name'] ?? "No Name",
@@ -77,6 +80,7 @@ class _Product {
       owner: json['owner_name'] ?? "Unknown",
       description:
           json['Tool_Description'] ?? "لا يوجد وصف لهذه الأداة حالياً.",
+      realValue: rv,
     );
   }
 }
@@ -324,6 +328,7 @@ class _HomePageState extends State<HomePage> {
               id: product.id,
               title: product.title,
               price: product.price,
+              realValue: product.realValue,
               images: product.images,
               description: product.description,
             ),
@@ -415,7 +420,7 @@ class _HomePageState extends State<HomePage> {
                   );
                 });
               },
-              icon:  Icon(Icons.notifications_active, size: 28),
+              icon: Icon(Icons.notifications_active, size: 28),
             ),
             IconButton(
               onPressed: () {

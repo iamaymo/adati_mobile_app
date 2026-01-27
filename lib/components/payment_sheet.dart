@@ -1,5 +1,5 @@
 import 'package:adati_mobile_app/components/product_dialog.dart';
-import 'package:adati_mobile_app/pages/rental_summary_Page.dart';
+import 'package:adati_mobile_app/pages/rental_summary_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

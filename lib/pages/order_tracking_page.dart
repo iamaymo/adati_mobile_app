@@ -58,9 +58,6 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
           currentOrder['Order_Status'] = newStatus;
           extraData.forEach((key, value) => currentOrder[key] = value);
         });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("تم تحديث الحالة بنجاح!")));
       }
     } catch (e) {
       print("Update failed: $e");
@@ -105,6 +102,59 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
     }
   }
 
+  Widget _buildInsuranceStatusCard() {
+    bool isRefunded =
+        currentOrder['insurance_details'] != null &&
+        currentOrder['insurance_details']['status'] == 'refunded';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isRefunded ? Colors.green.shade50 : Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isRefunded ? Colors.green.shade200 : Colors.blue.shade200,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isRefunded ? Icons.check_circle_outline : Icons.security_outlined,
+            color: isRefunded ? Colors.green : Colors.blue,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isRefunded ? "Insurance Refunded" : "Insurance Deposit Held",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: isRefunded
+                        ? Colors.green.shade800
+                        : Colors.blue.shade800,
+                  ),
+                ),
+                Text(
+                  isRefunded
+                      ? "The deposit has been returned to the customer's wallet."
+                      : "The system is holding the deposit until the tool is returned.",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isRefunded
+                        ? Colors.green.shade700
+                        : Colors.blue.shade700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -135,12 +185,14 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
               children: [
                 _buildInfoCard(),
                 const SizedBox(height: 16),
+                _buildInsuranceStatusCard(), // <-- إضافة حالة الضمان هنا
+                const SizedBox(height: 16),
                 _buildProgressCard(),
                 const SizedBox(height: 16),
                 _buildFinancialCard(),
                 const SizedBox(height: 24),
-                // الزر الديناميكي حسب الحالة
                 _buildBottomActionButton(),
+                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -292,10 +344,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
         );
       }
       if (status == 'Returning') {
-        return _actionBtn(
-          "Confirm Receipt of The Tool and Complete",
-          () => _updateStatus('Completed', {}),
-        );
+        return _actionBtn("Finish Order", () => _updateStatus('Completed', {}));
       }
     } else {
       // أزرار أيمن (المستأجر)
@@ -308,7 +357,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
       }
       if (status == 'On_The_Way') {
         return _actionBtn(
-          "Confirmation of Receipt of The Tool",
+          "Confirmation Receipt of The Tool",
           () => _updateStatus('Ongoing', {'is_received_by_customer': true}),
         );
       }

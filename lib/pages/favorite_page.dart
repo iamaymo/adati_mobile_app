@@ -70,7 +70,8 @@ class _FavoritePageState extends State<FavoritePage> {
     // 3. تحويل السعر
     double priceAsDouble =
         double.tryParse(item['Tool_Price'].toString()) ?? 0.0;
-
+    double realValueAsDouble =
+        double.tryParse(item['real_value'].toString()) ?? 0.0;
     // 4. استخراج ID المالك (حسب الـ Serializer الخاص بك هو User_ID داخل الأداة)
     int ownerId = item['User_ID'] ?? 0;
 
@@ -78,6 +79,7 @@ class _FavoritePageState extends State<FavoritePage> {
       id: item['Tool_ID'] ?? 0,
       title: item['Tool_Name'] ?? 'No Name',
       price: priceAsDouble.toInt().toString(), // سيحول 3000.0 إلى "3000"
+      realValue: realValueAsDouble,
       images: [
         item['Tool_Picture'].startsWith('http')
             ? item['Tool_Picture']

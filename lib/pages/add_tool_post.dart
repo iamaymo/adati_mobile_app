@@ -16,6 +16,8 @@ class _AddToolPostState extends State<AddToolPost> {
   final _nameController = TextEditingController();
   final _priceController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _realValueController =
+      TextEditingController(); // متحكم سعر الأداة الحقيقي
 
   static const int _maxImages = 3; // NEW: maximum allowed images
 
@@ -24,10 +26,11 @@ class _AddToolPostState extends State<AddToolPost> {
 
   // دالة للتحقق هل الحقول ممتلئة أم لا
   bool get _isFormValid {
-    return _nameController.text.trim().isNotEmpty &&
-        _priceController.text.trim().isNotEmpty &&
-        _descriptionController.text.trim().isNotEmpty;
-  }
+  return _nameController.text.trim().isNotEmpty &&
+      _priceController.text.trim().isNotEmpty &&
+      _realValueController.text.trim().isNotEmpty && // أضف هذا
+      _descriptionController.text.trim().isNotEmpty;
+}
 
   Future<void> uploadTool() async {
     setState(() => _isLoading = true);
@@ -41,6 +44,7 @@ class _AddToolPostState extends State<AddToolPost> {
       request.fields['Tool_Description'] = _descriptionController.text;
       request.fields['Tool_Price'] = _priceController.text;
       request.fields['Tool_Status'] = 'True';
+      request.fields['real_value'] = _realValueController.text;
 
       // --- التعديل هنا لتوزيع الصور على الثلاثة حقول ---
 
@@ -189,7 +193,67 @@ class _AddToolPostState extends State<AddToolPost> {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  _buildLabel('Real Tool Value (Market Price) *'),
+                  TextFormField(
+                    controller: _realValueController,
+                    onChanged: (value) => setState(() {}),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: _inputDecoration('Example: 50000'),
+                  ),
 
+                  // عرض مبلغ الضمان وتحذير التلاعب
+                  Builder(
+                    builder: (context) {
+                      double realVal =
+                          double.tryParse(_realValueController.text) ?? 0;
+                      double insurance = realVal * 0.25; // حسبة الـ 25%
+
+                      if (realVal <= 0) return const SizedBox.shrink();
+
+                      return Container(
+                        margin: const EdgeInsets.only(top: 10),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade50,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.orange.shade200),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.shield_outlined,
+                                  color: Colors.orange,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Security Deposit: ${insurance.toStringAsFixed(0)} YER',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              '⚠️ Warning: Any manipulation of the real price will lead to a higher deposit, which will discourage users from renting your tool.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.red,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
                   _buildLabel('Tool Description *'),
                   TextFormField(
                     controller: _descriptionController,
