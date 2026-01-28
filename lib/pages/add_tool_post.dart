@@ -13,6 +13,16 @@ class AddToolPost extends StatefulWidget {
 }
 
 class _AddToolPostState extends State<AddToolPost> {
+  String? _selectedCategory; // المتغير الذي سيخزن خيار المستخدم
+
+final List<String> _categories = [
+  'Electrical',
+  'Mechanical',
+  'Construction',
+  'Plumbing',
+  'Carpentry',
+  'Gardening',
+];
   final _nameController = TextEditingController();
   final _priceController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -30,6 +40,7 @@ class _AddToolPostState extends State<AddToolPost> {
       _priceController.text.trim().isNotEmpty &&
       _realValueController.text.trim().isNotEmpty && // أضف هذا
       _descriptionController.text.trim().isNotEmpty;
+      _selectedCategory != null; // التأكد من اختيار نوع الأداة
 }
 
   Future<void> uploadTool() async {
@@ -41,6 +52,8 @@ class _AddToolPostState extends State<AddToolPost> {
       request.headers['Authorization'] = 'Bearer $token';
 
       request.fields['Tool_Name'] = _nameController.text;
+      
+request.fields['Tool_Category'] = _selectedCategory!;
       request.fields['Tool_Description'] = _descriptionController.text;
       request.fields['Tool_Price'] = _priceController.text;
       request.fields['Tool_Status'] = 'True';
@@ -124,6 +137,23 @@ class _AddToolPostState extends State<AddToolPost> {
                     onChanged: (value) => setState(() {}), // لتحديث حالة الزر
                     decoration: _inputDecoration('Example: Electric Drill'),
                   ),
+                  const SizedBox(height: 20),
+                  _buildLabel('Tool Category *'),
+DropdownButtonFormField<String>(
+  value: _selectedCategory,
+  decoration: _inputDecoration('Select category'),
+  items: _categories.map((String category) {
+    return DropdownMenuItem<String>(
+      value: category,
+      child: Text(category),
+    );
+  }).toList(),
+  onChanged: (newValue) {
+    setState(() {
+      _selectedCategory = newValue;
+    });
+  },
+),
                   const SizedBox(height: 20),
 
                   _buildLabel('Rental Price (Per Day) *'),

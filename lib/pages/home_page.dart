@@ -25,24 +25,30 @@ class _Product {
   final int id;
   final String title;
   final String price;
-  final List<String> images; // 👈 تغيير من String لـ List<String>
+  final List<String> images;
   final int ownerId;
   final String owner;
   final String description;
   final double realValue;
+  // أضف هذه الحقول الجديدة
+  final String category;
+  final String city;
 
   _Product({
     required this.id,
     required this.title,
     required this.price,
-    required this.images, // 👈 تعديل هنا
+    required this.images,
     required this.ownerId,
     required this.owner,
     required this.description,
     required this.realValue,
+    required this.category, // أضف هنا
+    required this.city, // أضف هنا
   });
 
   factory _Product.fromJson(Map<String, dynamic> json) {
+    final String city;
     // 1. معالجة السعر
     String formattedPrice = "0";
     if (json['Tool_Price'] != null) {
@@ -75,12 +81,15 @@ class _Product {
       id: json['Tool_ID'] ?? 0,
       title: json['Tool_Name'] ?? "No Name",
       price: formattedPrice,
-      images: collectedImages, // 👈 تمرير القائمة المعبأة بالكامل
+      images: collectedImages,
       ownerId: json['User_ID'] ?? 0,
       owner: json['owner_name'] ?? "Unknown",
-      description:
-          json['Tool_Description'] ?? "لا يوجد وصف لهذه الأداة حالياً.",
-      realValue: rv,
+      description: json['Tool_Description'] ?? "",
+      realValue:
+          double.tryParse(json['real_value']?.toString() ?? '0.0') ?? 0.0,
+      // تأكد أن هذه المفاتيح تطابق ما يرسله السيرفر (Django)
+      category: json['Tool_Category'] ?? "Uncategorized",
+      city: json['owner_city'] ?? "Unknown",
     );
   }
 }
@@ -138,6 +147,42 @@ class _HomePageState extends State<HomePage> {
   String userName = "User";
   bool isLoading = true;
   List<_Product> products = [];
+  List<_Product> filteredProducts = [];
+  void _filterTools(String? selectedCategory, String? selectedCity) {
+    setState(() {
+      filteredProducts = products.where((tool) {
+        // فلترة الفئة: إذا كانت 'All' أو null نمرر الكل، وإلا نقارن
+        bool matchesCat =
+            (selectedCategory == null || selectedCategory == 'All')
+            ? true
+            : tool.category == selectedCategory;
+
+        // فلترة المدينة: نفس المنطق
+        bool matchesCity = (selectedCity == null || selectedCity == 'All')
+            ? true
+            : tool.city == selectedCity;
+
+        return matchesCat && matchesCity;
+      }).toList();
+    });
+  }
+
+  void _applyLocalFilter(String? category, String? city) {
+    setState(() {
+      filteredProducts = products.where((product) {
+        // إذا اختار 'All' أو لم يختار شيئاً، اعتبر الشرط محققاً (true)
+        final bool matchesCategory = (category == null || category == 'All')
+            ? true
+            : product.category == category;
+
+        final bool matchesCity = (city == null || city == 'All')
+            ? true
+            : product.city == city;
+
+        return matchesCategory && matchesCity;
+      }).toList();
+    });
+  }
 
   @override
   void initState() {
@@ -179,32 +224,65 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> fetchTools() async {
+  List _tools = [];
+
+  Future<void> _getTools({String? category, String? city}) async {
+    setState(() => isLoading = true);
+
     final token = await AuthService.getToken();
-    Map<String, String> headers = {'Content-Type': 'application/json'};
-    if (token != null) {
-      headers['Authorization'] = 'Bearer $token';
+    // بناء الرابط مع إضافة Query Parameters للفلترة
+    var uri = Uri.parse('http://10.0.2.2:8000/api/tools/').replace(
+      queryParameters: {
+        if (category != null) 'category': category,
+        if (city != null) 'city': city,
+      },
+    );
+
+    final response = await http.get(
+      uri,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        _tools = json.decode(response.body);
+        isLoading = false;
+      });
     }
+  }
+
+  Future<void> fetchTools({String? category, String? city}) async {
+    setState(() => isLoading = true); // تفعيل مؤشر التحميل
+
+    final token = await AuthService.getToken();
+
+    // بناء الرابط مع بارامترات الفلترة
+    final Map<String, String> queryParameters = {};
+    if (category != null && category != 'All')
+      queryParameters['category'] = category;
+    if (city != null) queryParameters['city'] = city;
+
+    final uri = Uri.http('10.0.2.2:8000', '/api/tools/', queryParameters);
 
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/tools/'),
-        headers: headers,
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
       );
 
       if (response.statusCode == 200) {
-        print("البيانات الخام من السيرفر: ${response.body}");
-        // فك تشفير البيانات ودعم اللغة العربية
+        // فك التشفير ودعم العربية
         List<dynamic> data = json.decode(utf8.decode(response.bodyBytes));
-
         if (mounted) {
           setState(() {
             products = data.map((item) => _Product.fromJson(item)).toList();
+            filteredProducts = products; // في البداية نعرض كل شيء
             isLoading = false;
           });
         }
-      } else {
-        setState(() => isLoading = false);
       }
     } catch (e) {
       print("Error fetching tools: $e");
@@ -298,7 +376,7 @@ class _HomePageState extends State<HomePage> {
                       )
                     : GridView.builder(
                         physics: const AlwaysScrollableScrollPhysics(),
-                        itemCount: products.length,
+                        itemCount: filteredProducts.length,
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
@@ -307,7 +385,7 @@ class _HomePageState extends State<HomePage> {
                               mainAxisSpacing: 15,
                             ),
                         itemBuilder: (context, index) =>
-                            _buildProductCard(products[index]),
+                            _buildProductCard(filteredProducts[index]),
                       ),
               ),
             ],
@@ -446,7 +524,18 @@ class _HomePageState extends State<HomePage> {
       children: [
         Expanded(child: MyTextField(label: 'Search tools...')),
         const SizedBox(width: 12),
-        SizedBox(height: 55, width: 55, child: Center(child: FilterButton())),
+        SizedBox(
+          height: 55,
+          width: 55,
+          child: Center(
+            child: FilterButton(
+              onApply: (category, city) {
+                // استدعاء الدالة لتحديث القائمة فوراً
+                _applyLocalFilter(category, city);
+              },
+            ),
+          ),
+        ),
       ],
     );
   }

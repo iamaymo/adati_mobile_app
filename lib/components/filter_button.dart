@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class FilterButton extends StatefulWidget {
-  const FilterButton({super.key});
+  final Function(String? category, String? city) onApply;
+
+  const FilterButton({super.key, required this.onApply});
 
   @override
   State<FilterButton> createState() => _FilterButtonState();
@@ -10,15 +12,18 @@ class FilterButton extends StatefulWidget {
 class _FilterButtonState extends State<FilterButton> {
   // قائمة الفئات
   final List<String> categories = [
+    'All',
     'Electrical',
     'Mechanical',
     'Construction',
     'Plumbing',
     'Carpentry',
+    'Gardening',
   ];
 
   // قائمة المدن اليمنية كاملة
   final List<String> yemenCities = [
+    'All',
     "Sana'a",
     "Aden",
     "Taiz",
@@ -126,8 +131,8 @@ class _FilterButtonState extends State<FilterButton> {
                           ),
                         ),
                         onPressed: () {
-                          // هنا تطبق الفلترة بناءً على selectedCategory و selectedCity
-                          print("Category: $selectedCategory, City: $selectedCity");
+                          // إرسال القيم المختارة إلى الصفحة الرئيسية
+                          widget.onApply(selectedCategory, selectedCity);
                           Navigator.of(context).pop();
                         },
                         child: const Text('Apply'),
