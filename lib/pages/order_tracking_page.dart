@@ -21,6 +21,143 @@ class OrderTrackingPage extends StatefulWidget {
 }
 
 class _OrderTrackingPageState extends State<OrderTrackingPage> {
+  // ------------- review
+  // متغيرات لحفظ قيم التقييم داخل الـ Bottom Sheet
+  double _selectedRating = 0;
+  final TextEditingController _reviewController = TextEditingController();
+
+  // 1. دالة عرض الـ Bottom Sheet للتقييم
+  void _showRatingSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            top: 20,
+            left: 20,
+            right: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                widget.isOwner ? "Rate the Customer" : "Rate the Tool",
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 15),
+              // نجوم التقييم
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  return IconButton(
+                    icon: Icon(
+                      index < _selectedRating ? Icons.star : Icons.star_border,
+                      color: primaryColor,
+                      size: 40,
+                    ),
+                    onPressed: () =>
+                        setModalState(() => _selectedRating = index + 1.0),
+                  );
+                }),
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                controller: _reviewController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: "Write your experience here...",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              _actionBtn("Submit Review", () async {
+                await _submitReview();
+                Navigator.pop(context);
+              }),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 2. دالة إرسال التقييم للسيرفر (سنربطها لاحقاً بالـ API)
+  // 2. دالة إرسال التقييم للسيرفر
+  Future<void> _submitReview() async {
+    // التأكد من أن المستخدم اختار تقييم على الأقل
+    if (_selectedRating == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please select a rating star")),
+      );
+      return;
+    }
+
+    final String url = 'http://10.0.2.2:8000/api/reviews/';
+
+    try {
+      final String? token = await AuthService.getToken();
+
+      // تجهيز البيانات بناءً على نوع المستخدم (مالك يقيم مستأجر أو مستأجر يقيم أداة)
+      Map<String, dynamic> body = {
+        "Review_Value": _selectedRating,
+        "Review_Text": _reviewController.text,
+        "Review_Type": widget.isOwner ? "U" : "T",
+        "Order_ID": currentOrder['Order_ID'], // إرسال رقم الطلب هنا ضروري جداً
+      };
+
+      // إضافة الهدف من التقييم
+      if (widget.isOwner) {
+        // المالك يقيم المستأجر الذي في الطلب
+        body["Target_User"] = currentOrder['User_ID'];
+      } else {
+        // المستأجر يقيم الأداة التي في الطلب
+        body["Target_Tool"] = currentOrder['Tool_ID'];
+      }
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Thank you! Review submitted successfully"),
+          ),
+        );
+        await _fetchOrderDetails();
+        // تصفير الحقول بعد النجاح
+        setState(() {
+          _selectedRating = 0;
+          _reviewController.clear();
+        });
+      } else {
+        print("Error: ${response.body}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to submit review. Try again.")),
+        );
+      }
+    } catch (e) {
+      print("Submit Review failed: $e");
+    }
+  }
+  // -------------
+
   final Color primaryColor = const Color(0xFFFFC72C);
   late dynamic currentOrder;
 
@@ -334,6 +471,24 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
 
   Widget _buildBottomActionButton() {
     String status = currentOrder['Order_Status'];
+
+    if (status == 'Completed') {
+      // التحقق مما إذا كان قد تم التقييم مسبقاً بناءً على دور المستخدم
+      bool hasRatedTool = currentOrder['has_rated_tool'] ?? false;
+      bool hasRatedCustomer = currentOrder['has_rated_customer'] ?? false;
+
+      if (widget.isOwner) {
+        // إذا كان المالك وقد قيم العميل بالفعل، نخفي الزر
+        if (hasRatedCustomer) return const SizedBox.shrink();
+
+        return _actionBtn("Rate Customer ⭐", () => _showRatingSheet());
+      } else {
+        // إذا كان المستأجر وقد قيم الأداة بالفعل، نخفي الزر
+        if (hasRatedTool) return const SizedBox.shrink();
+
+        return _actionBtn("Rate Tool ⭐", () => _showRatingSheet());
+      }
+    }
 
     if (widget.isOwner) {
       // أزرار سياف (المالك)
