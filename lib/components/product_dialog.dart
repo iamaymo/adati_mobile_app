@@ -17,9 +17,8 @@ class Product {
   final int reviews;
   final double realValue;
 
-  Product(
-     {
-      this.realValue = 0.0,
+  Product({
+    this.realValue = 0.0,
     required this.id,
     required this.ownerId,
     required this.title,
@@ -74,12 +73,37 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
   bool isFavorite = false;
   late final PageController _pageController;
   int _currentPage = 0;
+  double _currentRating = 0.0;
+  int _reviewCount = 0;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: 0);
+    _currentRating = widget.product.rating; // قيمة افتراضية من الكلاس
+    _reviewCount = widget.product.reviews;
     checkIfFavorite();
+    _fetchLatestRating();
+  }
+
+  Future<void> _fetchLatestRating() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/tools/${widget.product.id}/'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          // تم التعديل لتطابق الـ Serializer: Average_Rating و Total_Reviews
+          _currentRating =
+              double.tryParse(data['Average_Rating'].toString()) ?? 0.0;
+          _reviewCount = data['Total_Reviews'] ?? 0;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching rating: $e");
+    }
   }
 
   @override
@@ -515,21 +539,26 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
               Row(
                 children: [
                   Row(
-                    children: List.generate(
-                      5,
-                      (i) => Icon(
+                    children: List.generate(5, (i) {
+                      return Icon(
                         Icons.star,
                         size: 20,
-                        color: i < widget.product.rating.round()
+                        // إذا كان التقييم 4.5، النجمة الخامسة (index 4) تظل رمادية
+                        color: i < _currentRating.floor()
                             ? Colors.yellow[700]
                             : Colors.grey[700],
-                      ),
-                    ),
+                      );
+                    }),
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '${widget.product.rating} (${widget.product.reviews} Review)',
-                    style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                    // عرض الرقم مع منزلة عشرية واحدة وعدد المقيّمين
+                    '${_currentRating.toStringAsFixed(1)} ($_reviewCount Reviews)',
+                    style: TextStyle(
+                      color: Colors.grey[400],
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
