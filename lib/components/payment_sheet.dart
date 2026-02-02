@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:adati_mobile_app/components/product_dialog.dart';
 import 'package:adati_mobile_app/pages/rental_summary_page.dart';
+import 'package:adati_mobile_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 
 Future<void> showPaymentMethodSheet(
   BuildContext context, {
@@ -11,7 +15,10 @@ Future<void> showPaymentMethodSheet(
 }) {
   int step = 1;
   int selectedWallet = 0;
+  bool isFetchingPhone = true;
   String? errorMessage; // لظهور رسائل الخطأ للمستخدم
+  String userPhone = "Loading...";
+  bool isEditingPhone = false; // هل المستخدم حالياً في وضع تعديل الرقم يدوياً؟
 
   final phoneController = TextEditingController();
   List<TextEditingController> otpControllers = List.generate(
@@ -35,6 +42,32 @@ Future<void> showPaymentMethodSheet(
     builder: (ctx) {
       return StatefulBuilder(
         builder: (context, setState) {
+          Future<void> fetchUserPhone() async {
+            if (!isFetchingPhone) return; // لضمان عدم التكرار
+            final token = await AuthService.getToken();
+            try {
+              final response = await http.get(
+                Uri.parse('http://10.0.2.2:8000/api/me/'),
+                headers: {
+                  'Authorization': 'Bearer $token',
+                  'Content-Type': 'application/json',
+                },
+              );
+              if (response.statusCode == 200) {
+                final data = json.decode(utf8.decode(response.bodyBytes));
+                setState(() {
+                  userPhone = data['Phone_Number'] ?? "Not Set";
+                  phoneController.text = userPhone;
+                  isFetchingPhone = false;
+                });
+              }
+            } catch (e) {
+              setState(() => isFetchingPhone = false);
+            }
+          }
+
+          if (isFetchingPhone) fetchUserPhone();
+
           return Padding(
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -164,44 +197,91 @@ Future<void> showPaymentMethodSheet(
 
                   // STEP 2: PHONE NUMBER
                   if (step == 2) ...[
-                    const Align(
+                    Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        "Enter your 9-digit phone number",
+                        isEditingPhone
+                            ? "Enter phone number for this payment:"
+                            : "Payment via registered number:",
                         style: TextStyle(color: Colors.white70),
                       ),
                     ),
                     const SizedBox(height: 15),
-                    TextField(
-                      controller: phoneController,
-                      keyboardType: TextInputType.number,
-                      maxLength: 9,
-                      autofocus: true,
-                      style: const TextStyle(color: Colors.white),
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      onChanged: (_) => setState(() => errorMessage = null),
-                      decoration: InputDecoration(
-                        counterText: "", // Hidden for cleaner look
-                        prefixIcon: const Icon(
-                          Icons.phone,
-                          color: Color(0xFFFFC72C),
-                        ),
-                        hintText: "7xxxxxxxx",
-                        hintStyle: const TextStyle(color: Colors.white24),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.05),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(color: Colors.white24),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: Color(0xFFFFC72C),
+                    isEditingPhone
+                        ? TextField(
+                            controller: phoneController,
+                            keyboardType: TextInputType.phone,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              hintText: "777 777 777",
+                              hintStyle: const TextStyle(color: Colors.white24),
+                              filled: true,
+                              fillColor: Colors.white.withOpacity(0.05),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFFFC72C),
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          )
+                        : Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: const Color(0xFFFFC72C).withOpacity(0.2),
+                              ),
+                            ),
+                            child: isFetchingPhone
+                                ? const Center(
+                                    child: CircularProgressIndicator(
+                                      color: Color(0xFFFFC72C),
+                                    ),
+                                  )
+                                : Column(
+                                    children: [
+                                      Text(
+                                        phoneController.text.isEmpty
+                                            ? userPhone
+                                            : phoneController.text,
+                                        style: const TextStyle(
+                                          color: Color(0xFFFFC72C),
+                                          fontSize: 26,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 5),
+                                      const Text(
+                                        "Using this number for this transaction only",
+                                        style: TextStyle(
+                                          color: Colors.white38,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                           ),
-                          borderRadius: BorderRadius.circular(10),
+
+                    const SizedBox(height: 10),
+
+                    // زر التبديل بين العرض والتعديل
+                    if (!isEditingPhone)
+                      TextButton(
+                        onPressed: () => setState(() => isEditingPhone = true),
+                        child: const Text(
+                          "Change phone number",
+                          style: TextStyle(
+                            color: Colors.blueAccent,
+                            decoration: TextDecoration.underline,
+                          ),
                         ),
                       ),
-                    ),
                   ],
 
                   // STEP 3: OTP
@@ -226,11 +306,7 @@ Future<void> showPaymentMethodSheet(
                               fontWeight: FontWeight.bold,
                             ),
                             maxLength: 1,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
                             onChanged: (value) {
-                              setState(() => errorMessage = null);
                               if (value.isNotEmpty && index < 5)
                                 FocusScope.of(context).nextFocus();
                               if (value.isEmpty && index > 0)
@@ -255,17 +331,7 @@ Future<void> showPaymentMethodSheet(
                         );
                       }),
                     ),
-                    const SizedBox(height: 10),
-                    TextButton(
-                      onPressed: () => setState(() {
-                        step = 2;
-                        errorMessage = null;
-                      }),
-                      child: const Text(
-                        "Change phone number",
-                        style: TextStyle(color: Color(0xFFFFC72C)),
-                      ),
-                    ),
+                    // ملاحظة: تم حذف رابط "Change phone number" من هنا
                   ],
 
                   const SizedBox(height: 20),
@@ -275,56 +341,50 @@ Future<void> showPaymentMethodSheet(
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          if (step == 1) {
-                            step = 2;
-                          } else if (step == 2) {
-                            if (isYemeniPhoneValid(phoneController.text)) {
-                              step = 3;
-                              errorMessage = null;
-                            } else {
-                              errorMessage =
-                                  "Invalid Phone number. Must start with 77,71,73,70) and be 9 Numbers.";
-                            }
-                          } else if (step == 3) {
-                            String enteredOtp = otpControllers
-                                .map((e) => e.text)
-                                .join();
-                            if (enteredOtp == "000000") {
-                              Navigator.pop(context);
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => RentalSummaryPage(
-                                    amount: amount,
-                                    walletName:
-                                        wallets[selectedWallet]['name']!,
-                                    phoneNumber: phoneController.text,
-                                    tools: List<Product>.from(selectedTools),
-                                  ),
-                                ),
-                              );
-                            } else {
-                              errorMessage = "Invalid OTP. Use 000000";
-                            }
-                          }
-                        });
-                      },
+                      onPressed: isFetchingPhone
+                          ? null
+                          : () {
+                              setState(() {
+                                if (step == 1)
+                                  step = 2;
+                                else if (step == 2)
+                                  step = 3;
+                                else if (step == 3) {
+                                  // منطق التحقق والذهاب لصفحة الملخص
+                                  String enteredOtp = otpControllers
+                                      .map((e) => e.text)
+                                      .join();
+                                  if (enteredOtp == "000000") {
+                                    Navigator.pop(context);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => RentalSummaryPage(
+                                          amount: amount,
+                                          walletName:
+                                              wallets[selectedWallet]['name']!,
+                                          phoneNumber: phoneController.text,
+                                          tools: List<Product>.from(
+                                            selectedTools,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    errorMessage = "Invalid OTP. Use 000000";
+                                  }
+                                }
+                              });
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFFFC72C),
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
                       ),
                       child: Text(
-                        "Next",
-                        style: TextStyle(
+                        step == 3 ? "Verify" : "Next",
+                        style: const TextStyle(
                           color: Colors.black,
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
                         ),
                       ),
                     ),

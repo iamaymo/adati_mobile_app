@@ -117,6 +117,7 @@ class RequestDetailsPage extends StatelessWidget {
             _buildSectionHeader("Customer Details"),
             _buildInfoBox([
               _buildInfoRow("Name", order['customer_name']),
+              _buildRatingRow("Customer Rating", order['customer_rating']),
               _buildInfoRow("Wallet", order['Wallet_Name']),
               _buildInfoRow("Phone", order['Wallet_Phone_Number']),
               _buildAddressRow(
@@ -174,7 +175,6 @@ class RequestDetailsPage extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
             const SizedBox(height: 20),
 
             // Earnings Card
@@ -284,6 +284,44 @@ class RequestDetailsPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(15),
       ),
       child: Column(children: children),
+    );
+  }
+
+  Widget _buildRatingRow(String label, dynamic ratingValue) {
+    // تحويل القيمة إلى double سواء كانت String أو int من قاعدة البيانات
+    double rating = double.tryParse(ratingValue?.toString() ?? '0') ?? 0;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 15),
+          ),
+          Row(
+            children: [
+              // عرض النجوم
+              ...List.generate(5, (index) {
+                return Icon(
+                  index < rating ? Icons.star : Icons.star_border,
+                  color: Colors.amber,
+                  size: 18,
+                );
+              }),
+              const SizedBox(width: 5),
+              Text(
+                "($rating)",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
