@@ -11,6 +11,7 @@ class MyTextField extends StatefulWidget {
   final bool? enabled;
   final TextInputType? keyboardType;
   final bool obscureText;
+  final Function(String)? onChanged; // 👈 1. أضف هذا السطر
 
   const MyTextField({
     super.key,
@@ -20,6 +21,7 @@ class MyTextField extends StatefulWidget {
     this.enabled,
     this.keyboardType,
     this.obscureText = false,
+    this.onChanged, // 👈 2. وأضف هذا السطر هنا
   });
 
   @override
@@ -84,6 +86,7 @@ class _MyTextFieldState extends State<MyTextField> {
           keyboardType: widget.keyboardType,
           controller: _controller,
           validator: widget.validator,
+          onChanged: widget.onChanged,
           obscureText: widget.obscureText,
           decoration: InputDecoration(
             hintText: widget.label,

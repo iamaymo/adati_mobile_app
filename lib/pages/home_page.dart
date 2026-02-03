@@ -95,6 +95,18 @@ class _Product {
 }
 
 class _HomePageState extends State<HomePage> {
+  final TextEditingController _searchController = TextEditingController();
+
+  void _searchTools(String query) {
+    setState(() {
+      filteredProducts = products.where((product) {
+        final titleLower = product.title.toLowerCase();
+        final searchLower = query.toLowerCase();
+        return titleLower.contains(searchLower);
+      }).toList();
+    });
+  }
+
   void _checkAccess(VoidCallback onAuthorized) {
     if (currentUserId == null) {
       showDialog(
@@ -522,7 +534,14 @@ class _HomePageState extends State<HomePage> {
   Widget _buildSearchBar() {
     return Row(
       children: [
-        Expanded(child: MyTextField(label: 'Search tools...')),
+        Expanded(
+          child: MyTextField(
+            label: 'Search tools...',
+            controller: _searchController, // مرر المتحكم هنا
+            onChanged: (value) =>
+                _searchTools(value), // استدعاء دالة البحث عند كل حرف
+          ),
+        ),
         const SizedBox(width: 12),
         SizedBox(
           height: 55,
@@ -530,7 +549,6 @@ class _HomePageState extends State<HomePage> {
           child: Center(
             child: FilterButton(
               onApply: (category, city) {
-                // استدعاء الدالة لتحديث القائمة فوراً
                 _applyLocalFilter(category, city);
               },
             ),
