@@ -22,11 +22,14 @@ class _ReportProblemPageState extends State<ReportProblemPage> {
 
   // أنواع المشاكل المتوقعة في التطبيق
   final List<String> problemCategories = [
-    'Technical Problem',
-    'Fraud or Scam',
-    'User Behavior',
-    'Tool Damage/Issues',
-    'Other',
+    'Security Deposit Not Refunded', // الضمانة ما رجعت
+    'Tool Not Delivered', // الأداة ما وصلت من الدليفري
+    'Renter Did Not Return Tool', // المستأجر ما رجع الأداة
+    'Damaged Tool Received', // استلام أداة تالفة
+    'Technical Problem (App)', // مشكلة تقنية في التطبيق
+    'Fraud or Scam Attempt', // محاولة احتيال
+    'User Misbehavior', // سوء سلوك مستخدم
+    'Other Issues', // مشاكل أخرى
   ];
 
   @override
@@ -38,10 +41,13 @@ class _ReportProblemPageState extends State<ReportProblemPage> {
         child: Column(
           children: [
             // الهيدر
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              child: Row(
-                children: [BackButton(onPressed: () => Navigator.pop(context))],
+            Container(
+              
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+                onPressed: () => Navigator.pop(context),
               ),
             ),
 
@@ -90,7 +96,27 @@ class _ReportProblemPageState extends State<ReportProblemPage> {
                         ),
 
                       // إذا تم اختيار أي نوع مشكلة، يظهر نموذج المراسلة
-                      if (selectedProblemType != null)
+                      if (selectedProblemType != null) ...[
+                        if (selectedProblemType ==
+                            'Security Deposit Not Refunded')
+                          _buildQuickHintCard(
+                            "Deposit Refund Process",
+                            "Refunds usually take 24-48 hours after the tool is marked as 'Returned'. If it's been longer, please proceed with this report.",
+                          ),
+
+                        if (selectedProblemType == 'Tool Not Delivered')
+                          _buildQuickHintCard(
+                            "Delivery Issue",
+                            "Please ensure you have contacted the delivery person first. If they are unresponsive, let us know immediately.",
+                          ),
+
+                        if (selectedProblemType == 'Technical Problem (App)')
+                          _buildQuickHintCard(
+                            "App Troubleshooting",
+                            "Try clearing the app cache or updating to the latest version. If the problem persists, please fill out the form.",
+                          ),
+
+                        // نموذج المراسلة يظهر دائماً بعد اختيار النوع
                         _buildFormSection(
                           title: "Report Details",
                           subtitle:
@@ -99,6 +125,7 @@ class _ReportProblemPageState extends State<ReportProblemPage> {
                           onToggle: () =>
                               setState(() => isFormExpanded = !isFormExpanded),
                         ),
+                      ],
                     ],
                   ),
                 ),
