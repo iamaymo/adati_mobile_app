@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:adati_mobile_app/pages/report_problem_page.dart';
 import 'package:adati_mobile_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -25,6 +26,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
   // متغيرات لحفظ قيم التقييم داخل الـ Bottom Sheet
   double _selectedRating = 0;
   final TextEditingController _reviewController = TextEditingController();
+  bool _isToolStatusChecked = false; // لمتابعة حالة مربع التأكيد
 
   // 1. دالة عرض الـ Bottom Sheet للتقييم
   void _showRatingSheet() {
@@ -329,6 +331,52 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
                 _buildFinancialCard(),
                 const SizedBox(height: 24),
                 _buildBottomActionButton(),
+                const SizedBox(height: 16),
+                Center(
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ReportProblemPage(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.only(
+                        bottom: 4,
+                      ), // المسافة بين النص والخط
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: Colors.red, // لون الخط
+                            width: 1.0, // سمك الخط (حمله كما تحب)
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(
+                            Icons.report_problem_outlined,
+                            color: Colors.red,
+                            size: 20,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            "Report a Problem",
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontWeight:
+                                  FontWeight.bold, // جعل النص عريضاً أيضاً
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 24),
               ],
             ),
@@ -339,6 +387,23 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
   }
 
   Widget _buildInfoCard() {
+    double toolRealValue =
+        double.tryParse(currentOrder['real_value']?.toString() ?? '0') ?? 0;
+    double insuranceAmount = 0;
+    if (currentOrder['insurance_details'] != null) {
+      insuranceAmount =
+          double.tryParse(
+            currentOrder['insurance_details']['amount']?.toString() ?? '0',
+          ) ??
+          0;
+    } else {
+      insuranceAmount = toolRealValue * 0.25; // حسبة احتياطية
+    }
+
+    // 3. نسبة الضمان (حساب النسبة المئوية)
+    String insurancePercentage = toolRealValue > 0
+        ? "${((insuranceAmount / toolRealValue) * 100).toStringAsFixed(0)}%"
+        : "25%";
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: _cardDecoration(),
@@ -395,6 +460,23 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
           ),
           const SizedBox(height: 10),
           _buildOrderNumberRow(currentOrder['Order_ID'].toString()),
+
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Divider(thickness: 0.5),
+          ),
+          _buildInfoRow(
+            "Total Tool Value",
+            "${toolRealValue.toStringAsFixed(0)} YER",
+          ),
+          const SizedBox(height: 10),
+          _buildInfoRow("Security Deposit Rate", insurancePercentage),
+          const SizedBox(height: 10),
+          _buildInfoRow(
+            "Held Insurance Deposit",
+            "${insuranceAmount.toStringAsFixed(0)} YER",
+            textColor: Colors.blue.shade500,
+          ),
         ],
       ),
     );
@@ -418,11 +500,11 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
         "val": currentOrder['is_received_by_customer'] ?? false,
       },
       {
-        "title": "Return Requested",
+        "title": "Ready for Pickup",
         "val": currentOrder['is_return_requested'] ?? false,
       },
       {
-        "title": "Handed Back to Delivery",
+        "title": "Handed to Delivery (Back)",
         "val": currentOrder['is_return_handed_to_delivery'] ?? false,
       },
       {"title": "Finished", "val": currentOrder['Order_Status'] == 'Completed'},
@@ -499,7 +581,59 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
         );
       }
       if (status == 'Returning') {
-        return _actionBtn("Finish Order", () => _updateStatus('Completed', {}));
+        return Column(
+          children: [
+            // المربع التحذيري الأصفر
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.amber.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.amber.shade900,
+                  ),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      "Please inspect the tool's condition carefully before finishing the order.",
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            // مربع التأكيد (Checkbox)
+            CheckboxListTile(
+              value: _isToolStatusChecked,
+              onChanged: (val) => setState(() => _isToolStatusChecked = val!),
+              title: const Text(
+                "I have confirmed that the tool is in good condition",
+                style: TextStyle(fontSize: 14),
+              ),
+              controlAffinity: ListTileControlAffinity.leading,
+              activeColor: primaryColor,
+              contentPadding: EdgeInsets.zero,
+            ),
+            const SizedBox(height: 10),
+            // زر الإنهاء (يتفعل فقط إذا تم الضغط على الصح)
+            _actionBtn(
+              "Finish Order",
+              _isToolStatusChecked
+                  ? () => _updateStatus('Completed', {})
+                  : () {}, // دالة فارغة إذا لم يتم التأكيد
+              color: _isToolStatusChecked ? Colors.black : Colors.grey,
+            ),
+          ],
+        );
       }
     } else {
       // أزرار أيمن (المستأجر)
@@ -512,20 +646,20 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
       }
       if (status == 'On_The_Way') {
         return _actionBtn(
-          "Confirmation Receipt of The Tool",
+          "Confirm Tool Receipt",
           () => _updateStatus('Ongoing', {'is_received_by_customer': true}),
         );
       }
       if (status == 'Ongoing') {
         return _actionBtn(
-          "Request to Return The Tool",
+          "Ready for Pickup",
           () => _updateStatus('Returning', {'is_return_requested': true}),
         );
       }
       if (status == 'Returning' &&
           (currentOrder['is_return_handed_to_delivery'] == false)) {
         return _actionBtn(
-          "Handed to Delivery (Back to Owner)",
+          "Handed to Delivery (Back)",
           () => _updateStatus('Returning', {
             'is_return_handed_to_delivery': true,
           }),

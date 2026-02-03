@@ -104,6 +104,13 @@ class RentalSummaryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // إجمالي سعر الإيجار فقط
+    double totalRentalFee = amount;
+    // إجمالي مبلغ الضمان (25% من قيمة الأدوات)
+    double insuranceAmount =
+        tools.fold(0.0, (sum, p) => sum + p.realValue) * 0.25;
+    // الإجمالي الكلي المطلوب دفعه الآن
+    double grandTotal = totalRentalFee + insuranceAmount;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(title: Text("Rental Summary"), centerTitle: true),
@@ -126,23 +133,6 @@ class RentalSummaryPage extends StatelessWidget {
                     ...tools.map((product) => _buildToolCard(product)).toList(),
 
                     const SizedBox(height: 10),
-
-                    // تفاصيل الدفع والمحفظة
-                    _buildInfoCard("Payment Details", [
-                      _buildRow("Wallet", walletName),
-                      _buildRow("Wallet Phone Number", phoneNumber),
-                      _buildRow("Rental Duration", "1 Day"),
-                    ]),
-
-                    // تفاصيل السعر
-                    _buildInfoCard("Price Breakdown", [
-                      _buildRow(
-                        "Total Amount",
-                        "YER ${amount.toStringAsFixed(0)}",
-                        isBold: true,
-                      ),
-                    ]),
-
                     _buildInfoCard("Insurance Details", [
                       _buildRow(
                         "Total Tools Value",
@@ -156,6 +146,49 @@ class RentalSummaryPage extends StatelessWidget {
                       ),
                     ]),
                     _buildInsuranceNote(),
+
+                    // تفاصيل الدفع والمحفظة
+                    _buildInfoCard("Payment Details", [
+                      _buildRow("Wallet", walletName),
+                      _buildRow("Wallet Phone Number", phoneNumber),
+                      _buildRow("Rental Duration", "1 Day"),
+                      const Divider(height: 20), // فاصل بسيط قبل المبالغ
+
+                      _buildRow(
+                        "Rental Amount",
+                        "YER ${totalRentalFee.toStringAsFixed(0)}",
+                      ),
+                      _buildRow(
+                        "Security Deposit",
+                        "YER ${insuranceAmount.toStringAsFixed(0)}",
+                      ),
+
+                      const Divider(
+                        thickness: 1,
+                        height: 25,
+                      ), // خط عريض قبل الإجمالي
+
+                      _buildRow(
+                        "Total to Pay Now",
+                        "YER ${grandTotal.toStringAsFixed(0)}",
+                        isBold: true,
+                      ),
+
+                      // السطر "الحبوب" الذي يوضح المبلغ المسترد
+                      Container(
+                        margin: const EdgeInsets.only(top: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        child: _buildRow(
+                          "Returned to you later",
+                          "YER ${insuranceAmount.toStringAsFixed(0)}",
+                          isBold: true,
+                        ),
+                      ),
+                    ]),
+
                     // تحذير السياسة
                     _buildPolicyWarning(),
 
