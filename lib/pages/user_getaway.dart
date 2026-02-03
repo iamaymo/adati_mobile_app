@@ -1,6 +1,6 @@
 import 'package:adati_mobile_app/components/my_button.dart';
 import 'package:adati_mobile_app/pages/home_page.dart';
-import 'package:adati_mobile_app/pages/legal_and_policies.dart';
+import 'package:adati_mobile_app/pages/Reg_terms_and_policies.dart';
 import 'package:adati_mobile_app/pages/login_page.dart';
 import 'package:adati_mobile_app/pages/register_page.dart';
 import 'package:flutter/material.dart';

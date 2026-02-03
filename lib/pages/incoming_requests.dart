@@ -60,7 +60,20 @@ class _OperationsPageState extends State<OperationsPage> {
             // --- منطق الفرز هنا ---
             final allOrders = snapshot.data!;
             final activeOrders = allOrders
-                .where((o) => o['Order_Status'] != 'Completed')
+                .where(
+                  (o) =>
+                      o['Order_Status'] != 'Completed' &&
+                      o['Order_Status'] != 'Cancelled' &&
+                      o['Order_Status'] != 'Rejected',
+                )
+                .toList();
+            final inactiveOrders = allOrders
+                .where(
+                  (o) =>
+                      o['Order_Status'] == 'Completed' ||
+                      o['Order_Status'] == 'Cancelled' ||
+                      o['Order_Status'] == 'Rejected',
+                )
                 .toList();
             final completedOrders = allOrders
                 .where((o) => o['Order_Status'] == 'Completed')
@@ -69,17 +82,15 @@ class _OperationsPageState extends State<OperationsPage> {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                // أولاً: الطلبات النشطة
                 ...activeOrders.map((order) => _buildOrderCard(order)).toList(),
 
-                // ثانياً: الفاصل (يظهر فقط إذا كان هناك طلبات مكتملة)
-                if (completedOrders.isNotEmpty) ...[
-                  _buildSectionDivider("Completed"),
+                if (inactiveOrders.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  _buildSectionDivider("History"),
                   const SizedBox(height: 12),
                 ],
 
-                // ثالثاً: الطلبات المكتملة
-                ...completedOrders
+                ...inactiveOrders
                     .map((order) => _buildOrderCard(order))
                     .toList(),
               ],
@@ -109,17 +120,20 @@ class _OperationsPageState extends State<OperationsPage> {
   }
 
   Widget _buildOrderCard(dynamic order) {
-    bool isCompleted = order['Order_Status'] == 'Completed';
+    String status = order['Order_Status'];
+    // تعريف الحالات المنتهية
+    bool isInactive =
+        status == 'Completed' || status == 'Cancelled' || status == 'Rejected';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: isCompleted ? 0.5 : 2, // تقليل الظل للطلبات المنتهية
+      elevation: isInactive ? 0.5 : 2, // تقليل الظل للطلبات المنتهية
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: ListTile(
         // جعل الطلبات المكتملة باهتة قليلاً للتمييز
         contentPadding: const EdgeInsets.all(12),
         leading: Opacity(
-          opacity: isCompleted ? 0.6 : 1.0,
+          opacity: isInactive ? 0.6 : 1.0,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: order['tool_image'] != null
@@ -142,7 +156,7 @@ class _OperationsPageState extends State<OperationsPage> {
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
-            color: isCompleted ? Colors.grey : Colors.black,
+            color: isInactive ? Colors.grey : Colors.black,
           ),
         ),
         subtitle: Column(
@@ -168,9 +182,18 @@ class _OperationsPageState extends State<OperationsPage> {
             ),
           ],
         ),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: isInactive ? null : const Icon(Icons.chevron_right),
         onTap: () async {
-          print("Current Order Status: ${order['Order_Status']}");
+          if (isInactive && status != 'Completed') {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  "This request is $status and cannot be modified.",
+                ),
+              ),
+            );
+            return;
+          }
           List<String> trackingStatuses = [
             'Accepted',
             'On_The_Way',
@@ -180,7 +203,7 @@ class _OperationsPageState extends State<OperationsPage> {
           ];
 
           Widget targetPage;
-          if (trackingStatuses.contains(order['Order_Status'])) {
+          if (trackingStatuses.contains(status)) {
             targetPage = OrderTrackingPage(order: order, isOwner: true);
           } else {
             targetPage = RequestDetailsPage(order: order);

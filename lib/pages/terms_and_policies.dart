@@ -73,63 +73,60 @@ class TermsAndPoliciesPage extends StatelessWidget {
 
               // --- بنود السياسة ---
               _buildSectionTitle(
-                '1. Tool Responsibility',
-                Icons.handyman_outlined,
+                '1. Payments & Commission',
+                Icons.payments_outlined,
               ),
               _buildBulletPoint(
-                'The renter is fully responsible for the tool during the rental period and must return it in the same condition as received.',
+                'Adati uses a secure online payment system. The total amount includes the rental fee, a security deposit (insurance), and a service commission.',
               ),
               _buildBulletPoint(
-                'In case of damage or loss, the renter will bear the cost of repair or replacement as assessed by the owner.',
-              ),
-
-              _buildSectionTitle('2. Lawful Use', Icons.gavel_outlined),
-              _buildBulletPoint(
-                'Tools must be used only for legal and legitimate purposes.',
-              ),
-              _buildBulletPoint(
-                'Sub-leasing or re-renting the tool to a third party is strictly prohibited without written approval from the owner.',
+                'If a request is cancelled before approval, the full amount including commission will be refunded to your wallet/account.',
               ),
 
               _buildSectionTitle(
-                '3. Safety and Warranty',
-                Icons.security_outlined,
+                '2. Cancellation & Returns',
+                Icons.event_busy_outlined,
               ),
               _buildBulletPoint(
-                'The application does not provide any direct warranty regarding the condition or suitability of the tools.',
+                'Once the tool owner approves the request, cancellation is not permitted.',
               ),
               _buildBulletPoint(
-                'The renter is responsible for inspecting and ensuring the tool is safe before operation.',
-              ),
-              _buildBulletPoint(
-                'Adati acts only as a digital intermediary and bears no responsibility for accidents or disputes.',
-              ),
-
-              _buildSectionTitle('4. Conduct and Ratings', Icons.star_outline),
-              _buildBulletPoint(
-                'All users must behave respectfully and professionally.',
-              ),
-              _buildBulletPoint(
-                'Both parties have the right to rate each other after the rental is completed.',
+                'Delayed returns will result in deductions from your security deposit. The owner has the right to file a "Late Return Report" through the app.',
               ),
 
               _buildSectionTitle(
-                '5. Data and Privacy',
-                Icons.privacy_tip_outlined,
+                '3. Security Deposit (Insurance)',
+                Icons.shield_outlined,
               ),
               _buildBulletPoint(
-                'Your data is used only to facilitate the service and improve user experience.',
+                'The security deposit is held by Adati and is only released back to the renter after the owner confirms the safe return of the tool.',
               ),
               _buildBulletPoint(
-                'Personal information will not be shared with third parties without your explicit consent.',
+                'In case of damages or loss, Adati will deduct the repair costs from the deposit based on the reported evidence.',
               ),
 
-              _buildSectionTitle('6. Disclaimer', Icons.info_outline),
-              _buildBulletPoint(
-                'Adati shall not be held liable for any direct or indirect losses resulting from the use of the application.',
+              _buildSectionTitle(
+                '4. Identity Verification',
+                Icons.verified_user_outlined,
               ),
               _buildBulletPoint(
-                'Users are solely responsible for verifying the identity of the other party.',
+                'To ensure community safety, all users must provide a valid ID and verify their phone number. Providing false information will lead to permanent account suspension.',
+              ),
+
+              _buildSectionTitle(
+                '5. Adati as an Intermediary',
+                Icons.gavel_outlined,
+              ),
+              _buildBulletPoint(
+                'Adati acts as a mediator in disputes. While we strive to resolve conflicts fairly, the platform is not legally liable for any physical accidents or tool malfunctions.',
+              ),
+              _buildBulletPoint(
+                'Users are responsible for inspecting the tool carefully at the moment of handover.',
+              ),
+
+              _buildSectionTitle('6. Prohibited Actions', Icons.block_flipped),
+              _buildBulletPoint(
+                'Attempting to bypass the app payment system to avoid commission is strictly prohibited and will result in a permanent ban.',
               ),
             ],
           ),

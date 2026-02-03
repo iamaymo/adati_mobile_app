@@ -23,6 +23,7 @@ class _ReportProblemPageState extends State<ReportProblemPage> {
   // أنواع المشاكل المتوقعة في التطبيق
   final List<String> problemCategories = [
     'Security Deposit Not Refunded', // الضمانة ما رجعت
+    'Late Tool Return',
     'Tool Not Delivered', // الأداة ما وصلت من الدليفري
     'Renter Did Not Return Tool', // المستأجر ما رجع الأداة
     'Damaged Tool Received', // استلام أداة تالفة
@@ -42,7 +43,6 @@ class _ReportProblemPageState extends State<ReportProblemPage> {
           children: [
             // الهيدر
             Container(
-              
               alignment: Alignment.centerLeft,
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
               child: IconButton(
@@ -93,6 +93,12 @@ class _ReportProblemPageState extends State<ReportProblemPage> {
                         _buildQuickHintCard(
                           "App not working correctly?",
                           "Try clearing the app cache or updating to the latest version. If the problem persists, please fill out the form below.",
+                        ),
+                      // نصيحة تظهر عند اختيار "تأخر في الإرجاع"
+                      if (selectedProblemType == 'Late Tool Return')
+                        _buildQuickHintCard(
+                          "Late Return Policy",
+                          "Have you tried contacting the renter? Sometimes delays happen. If they don't respond within 3 hours, please complete this report so we can take action.",
                         ),
 
                       // إذا تم اختيار أي نوع مشكلة، يظهر نموذج المراسلة

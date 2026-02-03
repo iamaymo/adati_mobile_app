@@ -37,7 +37,7 @@ class _RentedToolsPageState extends State<RentedToolsPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
-          'My Rented Tools',
+          'Rented Tools',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
         centerTitle: true,
@@ -61,7 +61,20 @@ class _RentedToolsPageState extends State<RentedToolsPage> {
             // --- منطق الفرز للفصل بين النشط والمكتمل ---
             final allOrders = snapshot.data!;
             final activeOrders = allOrders
-                .where((o) => o['Order_Status'] != 'Completed')
+                .where(
+                  (o) =>
+                      o['Order_Status'] != 'Completed' &&
+                      o['Order_Status'] != 'Cancelled' &&
+                      o['Order_Status'] != 'Rejected',
+                )
+                .toList();
+            final inactiveOrders = allOrders
+                .where(
+                  (o) =>
+                      o['Order_Status'] == 'Completed' ||
+                      o['Order_Status'] == 'Cancelled' ||
+                      o['Order_Status'] == 'Rejected',
+                )
                 .toList();
             final completedOrders = allOrders
                 .where((o) => o['Order_Status'] == 'Completed')
@@ -73,14 +86,15 @@ class _RentedToolsPageState extends State<RentedToolsPage> {
                 // أولاً: الأدوات التي استأجرتها ولا تزال نشطة
                 ...activeOrders.map((order) => _buildOrderCard(order)).toList(),
 
-                // ثانياً: الفاصل المكتوب عليه Completed
-                if (completedOrders.isNotEmpty) ...[
-                  _buildSectionDivider("Completed"),
+                // ثانياً: الفاصل للأرشيف
+                if (inactiveOrders.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  _buildSectionDivider("History"), // تم تغيير الاسم ليكون أشمل
                   const SizedBox(height: 12),
                 ],
 
-                // ثالثاً: الأدوات التي انتهى استئجارها
-                ...completedOrders
+                // ثالثاً: الطلبات غير النشطة (مكتمل، ملغي، مرفوض)
+                ...inactiveOrders
                     .map((order) => _buildOrderCard(order))
                     .toList(),
               ],
@@ -110,16 +124,20 @@ class _RentedToolsPageState extends State<RentedToolsPage> {
   }
 
   Widget _buildOrderCard(dynamic order) {
-    bool isCompleted = order['Order_Status'] == 'Completed';
+    String status = order['Order_Status'];
+
+    // هل الطلب منتهي (مكتمل أو ملغي أو مرفوض)؟
+    bool isInactive =
+        status == 'Completed' || status == 'Cancelled' || status == 'Rejected';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: isCompleted ? 0.5 : 2, // ظل خفيف جداً للمنتهي
+      elevation: isInactive ? 0.5 : 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: ListTile(
         contentPadding: const EdgeInsets.all(12),
         leading: Opacity(
-          opacity: isCompleted ? 0.6 : 1.0, // جعل الصورة باهتة في المكتمل
+          opacity: isInactive ? 0.6 : 1.0,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: order['tool_image'] != null
@@ -142,9 +160,7 @@ class _RentedToolsPageState extends State<RentedToolsPage> {
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
-            color: isCompleted
-                ? Colors.grey
-                : Colors.black, // تغيير لون الخط للمكتمل
+            color: isInactive ? Colors.grey : Colors.black,
           ),
         ),
         subtitle: Column(
@@ -156,13 +172,13 @@ class _RentedToolsPageState extends State<RentedToolsPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: _getStatusColor(order['Order_Status']).withOpacity(0.1),
+                color: _getStatusColor(status).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(5),
               ),
               child: Text(
-                order['Order_Status'],
+                status,
                 style: TextStyle(
-                  color: _getStatusColor(order['Order_Status']),
+                  color: _getStatusColor(status),
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
@@ -170,8 +186,23 @@ class _RentedToolsPageState extends State<RentedToolsPage> {
             ),
           ],
         ),
-        trailing: const Icon(Icons.chevron_right),
+        // إخفاء سهم الانتقال إذا كان الطلب ملغياً أو مرفوضاً
+        trailing: (status == 'Cancelled' || status == 'Rejected')
+            ? null
+            : const Icon(Icons.chevron_right),
         onTap: () async {
+          // --- المنطق الجديد هنا ---
+          if (status == 'Cancelled' || status == 'Rejected') {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("This request was $status"),
+                backgroundColor: Colors.black87,
+                duration: const Duration(seconds: 1),
+              ),
+            );
+            return; // منع الانتقال
+          }
+
           final result = await Navigator.push(
             context,
             MaterialPageRoute(

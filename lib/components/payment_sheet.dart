@@ -287,7 +287,7 @@ Future<void> showPaymentMethodSheet(
                   // STEP 3: OTP
                   if (step == 3) ...[
                     Text(
-                      "Sent to ${phoneController.text}",
+                      "Code Sent to ${phoneController.text}",
                       style: const TextStyle(color: Colors.white70),
                     ),
                     const SizedBox(height: 20),

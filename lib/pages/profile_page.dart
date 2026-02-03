@@ -21,6 +21,8 @@ class _ProfilePageState extends State<ProfilePage> {
   bool isLoading = true;
   String street = "street";
   String? _networkImageUrl;
+  String totalReviews = "0";
+  double averageRating = 0.0;
 
   static const Color _bgYellow = Color(0xFFFBC02D);
 
@@ -51,6 +53,10 @@ class _ProfilePageState extends State<ProfilePage> {
           isLoading = false;
           street = data['Street'] ?? "No Street";
           _networkImageUrl = data['Profile_Image'];
+          averageRating =
+              double.tryParse(data['Average_Rating']?.toString() ?? '0.0') ??
+              0.0;
+          totalReviews = data['Total_Reviews']?.toString() ?? "0";
         });
       }
     } catch (e) {
@@ -81,7 +87,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            'My Profile',
+                            'Profile',
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w800,
@@ -188,7 +194,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           // زر Stars (تم ربطه الآن بصفحة RentedToolsPage)
                           _StatBox(
                             title: 'Orders',
-                            value: 'My Rented Tools',
+                            value: 'Rented Tools',
                             color: _bgYellow,
 
                             onTap: () {
@@ -259,6 +265,91 @@ class _ProfilePageState extends State<ProfilePage> {
                       _ProfileInfoTile(
                         icon: Icons.location_on_outlined,
                         title: "$address , $street",
+                      ),
+                      const SizedBox(height: 30),
+                      const Text(
+                        'Account Reputation',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // ويدجت التقييم
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFBC02D).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: const Color(0xFFFBC02D).withOpacity(0.2),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            // أيقونة النجمة الكبيرة مع الرقم
+                            Column(
+                              children: [
+                                const Icon(
+                                  Icons.star_rounded,
+                                  color: Color(0xFFFBC02D),
+                                  size: 32,
+                                ),
+                                Text(
+                                  averageRating.toStringAsFixed(1),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 20),
+
+                            // تفاصيل التقييم والنجوم الصغيرة
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "User Average Rating",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      // رسم النجوم بناءً على التقييم
+                                      ...List.generate(5, (index) {
+                                        return Icon(
+                                          index < averageRating.floor()
+                                              ? Icons.star_rounded
+                                              : Icons.star_outline_rounded,
+                                          color: const Color(0xFFFBC02D),
+                                          size: 18,
+                                        );
+                                      }),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        "($totalReviews reviews)",
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 30),
                     ],

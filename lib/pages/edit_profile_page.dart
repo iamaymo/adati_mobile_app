@@ -87,6 +87,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   // --- نافذة خيارات الصورة ---
   void _showImagePickerOptions() {
     showModalBottomSheet(
+      backgroundColor: Colors.black,
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -95,16 +96,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
         child: Wrap(
           children: [
             ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Take a Photo'),
+              leading: const Icon(Icons.camera_alt, color: Colors.white),
+              title: const Text(
+                'Take a Photo',
+                style: TextStyle(color: Colors.white),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.camera);
               },
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Choose from Gallery'),
+              leading: const Icon(Icons.photo_library, color: Colors.white,),
+              title: const Text('Choose from Gallery',style: TextStyle(color: Colors.white),),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.gallery);
