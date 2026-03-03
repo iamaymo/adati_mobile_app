@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:adati_mobile_app/services/auth_service.dart';
-
-// ✅ استخدام نفس الـ Model الموجود في مشروعك لضمان التوافق
 import '../components/product_dialog.dart';
 
 class MyToolsPage extends StatefulWidget {
@@ -49,15 +47,12 @@ class _MyToolsPageState extends State<MyToolsPage> {
       images: [_formatImageUrl(item['Tool_Picture'])],
       ownerId: item['User_ID'] ?? 0,
       description: item['Tool_Description'] ?? '',
-      // إذا كان الموديل يدعم الحالة، تأكد من إضافتها هنا
-      // status: item['Tool_Status'],
     );
   }
 
-  // 2. منطق جلب البيانات (Fetch)
   Future<void> _fetchMyTools() async {
     if (!mounted) return;
-    setState(() => _isLoading = true); // إظهار مؤشر التحميل عند التحديث
+    setState(() => _isLoading = true);
 
     final token = await AuthService.getToken();
     try {
@@ -85,7 +80,6 @@ class _MyToolsPageState extends State<MyToolsPage> {
     }
   }
 
-  // 3. منطق الحذف (Delete)
   Future<void> _deleteTool(int toolId) async {
     final token = await AuthService.getToken();
     try {
@@ -97,20 +91,15 @@ class _MyToolsPageState extends State<MyToolsPage> {
       if (response.statusCode == 204 || response.statusCode == 200) {
         if (mounted) {
           setState(() {
-            // هذا السطر هو المسؤول عن اختفاء العنصر من الشاشة فوراً
             _tools.removeWhere((t) => t['Tool_ID'] == toolId);
           });
         }
-        _showSuccessSnackBar("تم حذف الأداة بنجاح");
+        _showSuccessSnackBar("Tool deleted successfully");
       }
     } catch (e) {
       debugPrint("Delete Error: $e");
     }
   }
-
-  // 4. منطق تبديل الحالة (Toggle Availability)
-
-  // دالة مساعدة للرسائل
   void _showSuccessSnackBar(String msg) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -119,7 +108,7 @@ class _MyToolsPageState extends State<MyToolsPage> {
   }
 
   void _showOptionsSheet(BuildContext context, Map<String, dynamic> item) {
-    // تحديد هل الأداة متاحة حالياً أم لا
+
     bool isCurrentlyAvailable = item['Tool_Status'] == true;
 
     showModalBottomSheet(
@@ -151,9 +140,7 @@ class _MyToolsPageState extends State<MyToolsPage> {
                     style: TextStyle(color: Colors.white),
                   ),
                   onTap: () {
-                    Navigator.of(context).pop(); // إغلاق الـ BottomSheet
-
-                    // الانتقال لصفحة التعديل وتمرير بيانات الأداة الحالية (item)
+                    Navigator.of(context).pop();
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -162,7 +149,6 @@ class _MyToolsPageState extends State<MyToolsPage> {
                     );
                   },
                 ),
-                // الزر الذكي المحدث
                 ListTile(
                   leading: Icon(
                     isCurrentlyAvailable
@@ -182,7 +168,6 @@ class _MyToolsPageState extends State<MyToolsPage> {
                   ),
                   onTap: () {
                     Navigator.of(context).pop();
-                    // نرسل الـ ID والحالة الحالية
                     _toggleToolAvailability(
                       item['Tool_ID'],
                       isCurrentlyAvailable,
@@ -216,7 +201,7 @@ class _MyToolsPageState extends State<MyToolsPage> {
 
           builder: (_) => AlertDialog(
             backgroundColor:
-                Colors.grey[900], // جعل خلفية التنبيه داكنة لتناسب التصميم
+                Colors.grey[900],
             title: const Text(
               'Delete Tool',
               style: TextStyle(color: Colors.white),
@@ -264,7 +249,6 @@ class _MyToolsPageState extends State<MyToolsPage> {
       );
 
       if (response.statusCode == 200) {
-        // بدلاً من إعادة التحميل الكاملة، نحدث العنصر في القائمة المحلية لتوفير البيانات
         if (mounted) {
           setState(() {
             int index = _tools.indexWhere((t) => t['Tool_ID'] == toolId);
@@ -274,7 +258,7 @@ class _MyToolsPageState extends State<MyToolsPage> {
           });
         }
         _showSuccessSnackBar(
-          !currentStatus ? "الأداة متوفرة الآن" : "الأداة غير متوفرة",
+          !currentStatus ? "Tool is now available" : "Tool is now unavailable",
         );
       }
     } catch (e) {
@@ -303,22 +287,17 @@ class _MyToolsPageState extends State<MyToolsPage> {
   }
 
   Widget _buildToolCard(Map<String, dynamic> item) {
-    // 1. معالجة السعر ليظهر كـ رقم صحيح
     double priceDouble = double.tryParse(item['Tool_Price'].toString()) ?? 0.0;
     String cleanPrice = priceDouble
         .round()
-        .toString(); // استخدم round() بدلاً من toInt()
+        .toString();
 
-    // 2. معالجة الصورة
     String imageUrl = item['Tool_Picture'] != null
         ? (item['Tool_Picture'].startsWith('http')
               ? item['Tool_Picture']
               : 'http://10.0.2.2:8000${item['Tool_Picture']}')
         : '';
 
-    // 3. تحديد الحالة (المنطق الجديد)
-    // في Django: Tool_Status = True تعني متوفر، و False تعني مؤجر
-    // لذا نرسل "true" لـ _buildStatusBadge إذا كانت القيمة False
     bool isRented = item['Tool_Status'] == false;
 
     return GestureDetector(
@@ -374,7 +353,6 @@ class _MyToolsPageState extends State<MyToolsPage> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                // عرض الـ Badge بناءً على الحالة
                 _buildStatusBadge(isRented),
                 IconButton(
                   icon: const Icon(Icons.more_vert),
@@ -400,9 +378,8 @@ class _MyToolsPageState extends State<MyToolsPage> {
         ),
       ),
       body: RefreshIndicator(
-        color: const Color(0xFFFBC02D), // لون مؤشر التحميل (نفس لون تطبيقك)
+        color: const Color(0xFFFBC02D),
         onRefresh: () async {
-          // هذه الدالة تستدعى عند السحب من فوق لتحت
           await _fetchMyTools();
         },
         child: _isLoading

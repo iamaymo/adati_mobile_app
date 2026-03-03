@@ -11,7 +11,6 @@ class LegalPoliciesPage extends StatefulWidget {
 class _LegalPoliciesPageState extends State<LegalPoliciesPage> {
   bool _isAccepted = false;
 
-  // توحيد الهوية البصرية بناءً على مشروع Adati
   final Color themeYellow = const Color(0xFFFBC02D);
   final Color textColor = const Color(0xFF1A1A1A);
   final Color subTextColor = const Color(0xFF666666);
@@ -48,7 +47,6 @@ class _LegalPoliciesPageState extends State<LegalPoliciesPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- قسم الترحيب ---
               Text(
                 'Welcome to Adati 👋',
                 style: TextStyle(
@@ -79,7 +77,6 @@ class _LegalPoliciesPageState extends State<LegalPoliciesPage> {
               const SizedBox(height: 24),
               const Divider(thickness: 1, color: Color(0xFFEEEEEE)),
 
-              // --- بنود السياسة الاحترافية لمشروع أداتي ---
               _buildSectionTitle(
                 '1. Payments & Security Deposit',
                 Icons.payments_outlined,
@@ -133,7 +130,6 @@ class _LegalPoliciesPageState extends State<LegalPoliciesPage> {
 
               const SizedBox(height: 32),
 
-              // --- منطقة الموافقة (Checkbox) ---
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -168,7 +164,6 @@ class _LegalPoliciesPageState extends State<LegalPoliciesPage> {
 
               const SizedBox(height: 24),
 
-              // --- زر القبول والمتابعة ---
               MyButton(
                 onPressed: _isAccepted
                     ? () => Navigator.of(context).pop(true)
@@ -184,7 +179,6 @@ class _LegalPoliciesPageState extends State<LegalPoliciesPage> {
     );
   }
 
-  // ويدجت عنوان القسم مع أيقونة
   Widget _buildSectionTitle(String title, IconData icon) {
     return Padding(
       padding: const EdgeInsets.only(top: 24, bottom: 12),
@@ -205,7 +199,6 @@ class _LegalPoliciesPageState extends State<LegalPoliciesPage> {
     );
   }
 
-  // ويدجت نقطة الشرح
   Widget _buildBulletPoint(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10, left: 4),

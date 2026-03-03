@@ -17,8 +17,6 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
-
-    // إعداد الأنيميشن (fade in)
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -27,7 +25,6 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    // بعد 3 ثواني ينتقل
     Timer(const Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,

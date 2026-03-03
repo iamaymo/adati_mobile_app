@@ -82,7 +82,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     children: [
                       const SizedBox(height: 15),
 
-                      // Header
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -108,7 +107,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Avatar Section
                       Column(
                         children: [
                           Container(
@@ -129,9 +127,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               backgroundColor: Colors.white,
                               child: CircleAvatar(
                                 radius: 46,
-                                backgroundColor:
-                                    Colors.grey[300], // خلفية فاتحة للأيقونة
-                                // 1. نقوم بتحديد الصورة الخلفية هنا
+                                backgroundColor: Colors.grey[300],
                                 backgroundImage: _networkImageUrl != null
                                     ? NetworkImage(
                                         _networkImageUrl!.startsWith('http')
@@ -142,14 +138,13 @@ class _ProfilePageState extends State<ProfilePage> {
                                             : 'http://10.0.2.2:8000$_networkImageUrl',
                                       )
                                     : null,
-                                // 2. هنا نضع الشرط: إذا لا توجد صورة خلفية، أظهر الأيقونة
                                 child: _networkImageUrl == null
                                     ? const Icon(
                                         Icons.person,
                                         size: 50,
                                         color: Colors.black,
                                       )
-                                    : null, // إذا وجدت صورة، الـ child يكون فارغاً حتى لا يغطي عليها
+                                    : null,
                               ),
                             ),
                           ),
@@ -174,7 +169,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
                       const SizedBox(height: 25),
 
-                      // Stats Section
                       Row(
                         children: [
                           _StatBox(
@@ -191,7 +185,6 @@ class _ProfilePageState extends State<ProfilePage> {
                             },
                           ),
                           const SizedBox(width: 15),
-                          // زر Stars (تم ربطه الآن بصفحة RentedToolsPage)
                           _StatBox(
                             title: 'Orders',
                             value: 'Rented Tools',
@@ -276,7 +269,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       const SizedBox(height: 12),
 
-                      // ويدجت التقييم
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 14,
@@ -291,7 +283,6 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         child: Row(
                           children: [
-                            // أيقونة النجمة الكبيرة مع الرقم
                             Column(
                               children: [
                                 const Icon(
@@ -310,7 +301,6 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             const SizedBox(width: 20),
 
-                            // تفاصيل التقييم والنجوم الصغيرة
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,7 +315,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                   const SizedBox(height: 4),
                                   Row(
                                     children: [
-                                      // رسم النجوم بناءً على التقييم
                                       ...List.generate(5, (index) {
                                         return Icon(
                                           index < averageRating.floor()
@@ -361,7 +350,6 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-// المكون الفرعي StatBox
 class _StatBox extends StatelessWidget {
   final String title;
   final String value;
@@ -408,7 +396,6 @@ class _StatBox extends StatelessWidget {
   }
 }
 
-// مكون عرض المعلومات الشخصية
 class _ProfileInfoTile extends StatelessWidget {
   final IconData icon;
   final String title;

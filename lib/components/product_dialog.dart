@@ -7,11 +7,11 @@ import 'package:adati_mobile_app/services/auth_service.dart';
 import 'cart.dart';
 
 class Product {
-  final int id; // أضفنا الـ ID للتعامل مع السيرفر
+  final int id;
   final int ownerId;
   final String title;
   final String price;
-  final List<String> images; // changed to multiple images
+  final List<String> images;
   final String description;
   final double rating;
   final int reviews;
@@ -80,7 +80,7 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: 0);
-    _currentRating = widget.product.rating; // قيمة افتراضية من الكلاس
+    _currentRating = widget.product.rating;
     _reviewCount = widget.product.reviews;
     checkIfFavorite();
     _fetchLatestRating();
@@ -95,7 +95,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          // تم التعديل لتطابق الـ Serializer: Average_Rating و Total_Reviews
           _currentRating =
               double.tryParse(data['Average_Rating'].toString()) ?? 0.0;
           _reviewCount = data['Total_Reviews'] ?? 0;
@@ -112,7 +111,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
     super.dispose();
   }
 
-  // التحقق من حالة المفضلة عند فتح الديالوج
   Future<void> checkIfFavorite() async {
     final token = await AuthService.getToken();
     try {
@@ -131,7 +129,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
     }
   }
 
-  // تغيير حالة المفضلة في السيرفر
   Future<void> toggleFavorite() async {
     final token = await AuthService.getToken();
     try {
@@ -212,7 +209,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                         );
                       },
                     ),
-                    // left arrow
                     Positioned(
                       left: 8,
                       top: 0,
@@ -247,7 +243,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                         },
                       ),
                     ),
-                    // right arrow
                     Positioned(
                       right: 8,
                       top: 0,
@@ -285,7 +280,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                         },
                       ),
                     ),
-                    // dots indicator
                     if (images.isNotEmpty)
                       Positioned(
                         left: 0,
@@ -321,9 +315,9 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                           ),
                         ),
                       ),
-                  ], // نهاية Stack children
+                  ],
                 );
-              }, // نهاية Builder
+              },
             ),
           ),
         ),
@@ -349,7 +343,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // السطر العلوي: رجوع ومفضلة
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -369,16 +362,14 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
               ),
               const SizedBox(height: 8),
 
-              // منطقة صور المنتج - تم تعديل الـ Stack هنا
               GestureDetector(
                 onTap: () => _showFullScreenImage(context),
                 child: SizedBox(
-                  height: 220, // زيادة الارتفاع قليلاً ليكون أوضح
+                  height: 220,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Stack(
                       children: [
-                        // 1. عرض الصور (PageView)
                         PageView.builder(
                           controller: _pageController,
                           itemCount: images.isNotEmpty ? images.length : 1,
@@ -401,7 +392,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                               images[idx],
                               fit: BoxFit.contain,
                               width: double.infinity,
-                              // إضافة Loading Indicator لكل صورة
                               loadingBuilder:
                                   (context, child, loadingProgress) {
                                     if (loadingProgress == null) return child;
@@ -419,7 +409,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                           },
                         ),
 
-                        // 2. سهم التنقل لليسار
                         if (images.length > 1 && _currentPage > 0)
                           Positioned(
                             left: 0,
@@ -439,7 +428,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                             ),
                           ),
 
-                        // 3. سهم التنقل لليمين
                         if (images.length > 1 &&
                             _currentPage < images.length - 1)
                           Positioned(
@@ -460,7 +448,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                             ),
                           ),
 
-                        // 4. مؤشر النقاط (Dots)
                         if (images.length > 1)
                           Positioned(
                             bottom: 10,
@@ -494,7 +481,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
               ),
               const SizedBox(height: 15),
 
-              // العنوان والسعر
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -535,7 +521,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
               ),
               const SizedBox(height: 8),
 
-              // التقييم
               Row(
                 children: [
                   Row(
@@ -543,7 +528,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                       return Icon(
                         Icons.star,
                         size: 20,
-                        // إذا كان التقييم 4.5، النجمة الخامسة (index 4) تظل رمادية
                         color: i < _currentRating.floor()
                             ? Colors.yellow[700]
                             : Colors.grey[700],
@@ -552,7 +536,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    // عرض الرقم مع منزلة عشرية واحدة وعدد المقيّمين
                     '${_currentRating.toStringAsFixed(1)} ($_reviewCount Reviews)',
                     style: TextStyle(
                       color: Colors.grey[400],
@@ -564,7 +547,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
               ),
               const SizedBox(height: 12),
 
-              // تفاصيل المنتج
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -586,7 +568,6 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
               ),
               const SizedBox(height: 24),
 
-              // أزرار التحكم (تصميم مدمج)
               widget.product.ownerId == widget.currentUserId
                   ? Padding(
                       padding: const EdgeInsets.only(bottom: 20),
@@ -674,9 +655,7 @@ class _ProductDialogContentState extends State<_ProductDialogContent> {
                                           amount: amount,
                                           walletName: selectedWalletName,
                                           phoneNumber: userPhone,
-                                          tools: [
-                                            widget.product,
-                                          ], // تمرير الأداة الحالية
+                                          tools: [widget.product],
                                         ),
                                       ),
                                     );

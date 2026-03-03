@@ -22,7 +22,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   String? _selectedCity;
   File? _imageFile;
-  String? _networkImageUrl; // للصورة القادمة من السيرفر
+  String? _networkImageUrl;
   bool _isLoading = true;
   bool _isSaving = false;
 
@@ -55,12 +55,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _fetchUserData();
   }
 
-  // --- جلب بيانات المستخدم من السيرفر ---
   Future<void> _fetchUserData() async {
     try {
       final token = await AuthService.getToken();
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/me/'), // تأكد من الرابط
+        Uri.parse('http://10.0.2.2:8000/api/me/'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -84,7 +83,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
   }
 
-  // --- نافذة خيارات الصورة ---
   void _showImagePickerOptions() {
     showModalBottomSheet(
       backgroundColor: Colors.black,
@@ -142,8 +140,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
   }
 
-  // --- حفظ البيانات (MultipartRequest) ---
-  // --- حفظ البيانات (MultipartRequest) ---
   Future<void> _saveProfile() async {
     setState(() => _isSaving = true);
     try {
@@ -166,12 +162,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         );
       }
 
-      // إرسال الطلب واستلام الاستجابة كاملة
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
-        // نجاح التعديل
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Profile Updated Successfully!"),
@@ -180,7 +174,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
         );
         Navigator.pop(context);
       } else if (response.statusCode == 400) {
-        // فشل التعديل بسبب بيانات موجودة مسبقاً
         final errorData = jsonDecode(response.body);
         String errorMessage = "Update failed. Please try again.";
 
@@ -193,7 +186,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
-            backgroundColor: Colors.red, // لون أحمر للتنبيه بالخطأ
+            backgroundColor: Colors.red,
           ),
         );
       } else {
@@ -231,7 +224,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
         padding: const EdgeInsets.all(25.0),
         child: Column(
           children: [
-            // --- الصورة الشخصية مع القلم ---
             Center(
               child: Stack(
                 children: [
@@ -246,8 +238,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                           ? _networkImageUrl!.replaceAll(
                                               '127.0.0.1',
                                               '10.0.2.2',
-                                            ) // لو الرابط كامل نعدل الايبي فقط
-                                          : 'http://10.0.2.2:8000$_networkImageUrl', // لو الرابط ناقص (مسار فقط) نضيف السيرفر يدوياً
+                                            ) 
+                                          : 'http://10.0.2.2:8000$_networkImageUrl', 
                                     )
                                   : null)
                               as ImageProvider?,

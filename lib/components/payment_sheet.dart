@@ -16,9 +16,9 @@ Future<void> showPaymentMethodSheet(
   int step = 1;
   int selectedWallet = 0;
   bool isFetchingPhone = true;
-  String? errorMessage; // لظهور رسائل الخطأ للمستخدم
+  String? errorMessage;
   String userPhone = "Loading...";
-  bool isEditingPhone = false; // هل المستخدم حالياً في وضع تعديل الرقم يدوياً؟
+  bool isEditingPhone = false;
 
   final phoneController = TextEditingController();
   List<TextEditingController> otpControllers = List.generate(
@@ -43,7 +43,7 @@ Future<void> showPaymentMethodSheet(
       return StatefulBuilder(
         builder: (context, setState) {
           Future<void> fetchUserPhone() async {
-            if (!isFetchingPhone) return; // لضمان عدم التكرار
+            if (!isFetchingPhone) return;
             final token = await AuthService.getToken();
             try {
               final response = await http.get(
@@ -81,7 +81,6 @@ Future<void> showPaymentMethodSheet(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Header
                   Row(
                     children: [
                       Icon(
@@ -114,7 +113,6 @@ Future<void> showPaymentMethodSheet(
                   const Divider(color: Colors.white24),
                   const SizedBox(height: 12),
 
-                  // Display Error Message if exists
                   if (errorMessage != null) ...[
                     Container(
                       padding: const EdgeInsets.all(8),
@@ -143,7 +141,6 @@ Future<void> showPaymentMethodSheet(
                     const SizedBox(height: 12),
                   ],
 
-                  // STEP 1: SELECT WALLET
                   if (step == 1) ...[
                     for (var i = 0; i < wallets.length; i++)
                       GestureDetector(
@@ -194,8 +191,6 @@ Future<void> showPaymentMethodSheet(
                         ),
                       ),
                   ],
-
-                  // STEP 2: PHONE NUMBER
                   if (step == 2) ...[
                     Align(
                       alignment: Alignment.centerLeft,
@@ -269,8 +264,6 @@ Future<void> showPaymentMethodSheet(
                           ),
 
                     const SizedBox(height: 10),
-
-                    // زر التبديل بين العرض والتعديل
                     if (!isEditingPhone)
                       TextButton(
                         onPressed: () => setState(() => isEditingPhone = true),
@@ -284,7 +277,6 @@ Future<void> showPaymentMethodSheet(
                       ),
                   ],
 
-                  // STEP 3: OTP
                   if (step == 3) ...[
                     Text(
                       "Code Sent to ${phoneController.text}",
@@ -331,13 +323,9 @@ Future<void> showPaymentMethodSheet(
                         );
                       }),
                     ),
-                    // ملاحظة: تم حذف رابط "Change phone number" من هنا
                   ],
 
                   const SizedBox(height: 20),
-
-                  // Action Button
-                  // Action Button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -350,7 +338,6 @@ Future<void> showPaymentMethodSheet(
                                 else if (step == 2)
                                   step = 3;
                                 else if (step == 3) {
-                                  // منطق التحقق والذهاب لصفحة الملخص
                                   String enteredOtp = otpControllers
                                       .map((e) => e.text)
                                       .join();

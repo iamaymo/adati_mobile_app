@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // نحتاجه لمنع إدخال الحروف في السعر
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:adati_mobile_app/services/auth_service.dart';
-import 'package:image_picker/image_picker.dart'; // NEW
+import 'package:image_picker/image_picker.dart';
 
 class AddToolPost extends StatefulWidget {
   const AddToolPost({super.key});
@@ -13,35 +13,33 @@ class AddToolPost extends StatefulWidget {
 }
 
 class _AddToolPostState extends State<AddToolPost> {
-  String? _selectedCategory; // المتغير الذي سيخزن خيار المستخدم
+  String? _selectedCategory;
 
-final List<String> _categories = [
-  'Electrical',
-  'Mechanical',
-  'Construction',
-  'Plumbing',
-  'Carpentry',
-  'Gardening',
-];
+  final List<String> _categories = [
+    'Electrical',
+    'Mechanical',
+    'Construction',
+    'Plumbing',
+    'Carpentry',
+    'Gardening',
+  ];
   final _nameController = TextEditingController();
   final _priceController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _realValueController =
-      TextEditingController(); // متحكم سعر الأداة الحقيقي
+  final _realValueController = TextEditingController();
 
-  static const int _maxImages = 3; // NEW: maximum allowed images
+  static const int _maxImages = 3;
 
-  List<String> _selectedImages = []; // NEW: multiple image paths
+  List<String> _selectedImages = [];
   bool _isLoading = false;
 
-  // دالة للتحقق هل الحقول ممتلئة أم لا
   bool get _isFormValid {
-  return _nameController.text.trim().isNotEmpty &&
-      _priceController.text.trim().isNotEmpty &&
-      _realValueController.text.trim().isNotEmpty && // أضف هذا
-      _descriptionController.text.trim().isNotEmpty;
-      _selectedCategory != null; // التأكد من اختيار نوع الأداة
-}
+    return _nameController.text.trim().isNotEmpty &&
+        _priceController.text.trim().isNotEmpty &&
+        _realValueController.text.trim().isNotEmpty &&
+        _descriptionController.text.trim().isNotEmpty;
+    _selectedCategory != null;
+  }
 
   Future<void> uploadTool() async {
     setState(() => _isLoading = true);
@@ -52,22 +50,18 @@ final List<String> _categories = [
       request.headers['Authorization'] = 'Bearer $token';
 
       request.fields['Tool_Name'] = _nameController.text;
-      
-request.fields['Tool_Category'] = _selectedCategory!;
+
+      request.fields['Tool_Category'] = _selectedCategory!;
       request.fields['Tool_Description'] = _descriptionController.text;
       request.fields['Tool_Price'] = _priceController.text;
       request.fields['Tool_Status'] = 'True';
       request.fields['real_value'] = _realValueController.text;
 
-      // --- التعديل هنا لتوزيع الصور على الثلاثة حقول ---
-
       if (_selectedImages.isNotEmpty) {
-        // الصورة الأولى للحقل الأساسي
         request.files.add(
           await http.MultipartFile.fromPath('Tool_Picture', _selectedImages[0]),
         );
 
-        // الصورة الثانية (إذا وجدت) للحقل الثاني
         if (_selectedImages.length > 1) {
           request.files.add(
             await http.MultipartFile.fromPath(
@@ -77,7 +71,6 @@ request.fields['Tool_Category'] = _selectedCategory!;
           );
         }
 
-        // الصورة الثالثة (إذا وجدت) للحقل الثالث
         if (_selectedImages.length > 2) {
           request.files.add(
             await http.MultipartFile.fromPath(
@@ -87,7 +80,6 @@ request.fields['Tool_Category'] = _selectedCategory!;
           );
         }
       }
-      // -----------------------------------------------
 
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
@@ -134,49 +126,45 @@ request.fields['Tool_Category'] = _selectedCategory!;
                   _buildLabel('Tool Name *'),
                   TextFormField(
                     controller: _nameController,
-                    onChanged: (value) => setState(() {}), // لتحديث حالة الزر
+                    onChanged: (value) => setState(() {}),
                     decoration: _inputDecoration('Example: Electric Drill'),
                   ),
                   const SizedBox(height: 20),
                   _buildLabel('Tool Category *'),
-DropdownButtonFormField<String>(
-  value: _selectedCategory,
-  decoration: _inputDecoration('Select category'),
-  items: _categories.map((String category) {
-    return DropdownMenuItem<String>(
-      value: category,
-      child: Text(category),
-    );
-  }).toList(),
-  onChanged: (newValue) {
-    setState(() {
-      _selectedCategory = newValue;
-    });
-  },
-),
+                  DropdownButtonFormField<String>(
+                    value: _selectedCategory,
+                    decoration: _inputDecoration('Select category'),
+                    items: _categories.map((String category) {
+                      return DropdownMenuItem<String>(
+                        value: category,
+                        child: Text(category),
+                      );
+                    }).toList(),
+                    onChanged: (newValue) {
+                      setState(() {
+                        _selectedCategory = newValue;
+                      });
+                    },
+                  ),
                   const SizedBox(height: 20),
 
                   _buildLabel('Rental Price (Per Day) *'),
                   TextFormField(
                     controller: _priceController,
                     onChanged: (value) =>
-                        setState(() {}), // لتحديث الحسبة فوراً أثناء الكتابة
+                        setState(() {}),
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     decoration: _inputDecoration('Example: 3000'),
                   ),
 
-                  // الملاحظة الديناميكية
                   Padding(
                     padding: const EdgeInsets.only(top: 8.0, left: 4.0),
                     child: Builder(
                       builder: (context) {
-                        // جلب القيمة من المتحكم وتحويلها لرقم
                         double inputPrice =
                             double.tryParse(_priceController.text) ?? 0;
-                        // حساب الخصم (10%)
                         double fee = inputPrice * 0.10;
-                        // المبلغ النهائي
                         double finalAmount = inputPrice - fee;
 
                         return Column(
@@ -212,7 +200,7 @@ DropdownButtonFormField<String>(
                                     fontSize: 13,
                                     color: Color(
                                       0xFF2E5AAC,
-                                    ), // لون أزرق لتمييز المبلغ
+                                    ), 
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -232,12 +220,11 @@ DropdownButtonFormField<String>(
                     decoration: _inputDecoration('Example: 50000'),
                   ),
 
-                  // عرض مبلغ الضمان وتحذير التلاعب
                   Builder(
                     builder: (context) {
                       double realVal =
                           double.tryParse(_realValueController.text) ?? 0;
-                      double insurance = realVal * 0.25; // حسبة الـ 25%
+                      double insurance = realVal * 0.25; 
 
                       if (realVal <= 0) return const SizedBox.shrink();
 
@@ -287,7 +274,7 @@ DropdownButtonFormField<String>(
                   _buildLabel('Tool Description *'),
                   TextFormField(
                     controller: _descriptionController,
-                    onChanged: (value) => setState(() {}), // لتحديث حالة الزر
+                    onChanged: (value) => setState(() {}), 
                     maxLines: 4,
                     decoration: _inputDecoration(
                       'Write about tool condition...',
@@ -295,16 +282,13 @@ DropdownButtonFormField<String>(
                   ),
                   const SizedBox(height: 30),
 
-                  // Selected images grid (appears between Description and Add Image button)
                   if (_selectedImages.isNotEmpty) _buildImageGrid(),
                   const SizedBox(height: 20),
 
-                  // Full-width Add Image button only when NO images selected
                   if (_selectedImages.isEmpty) _buildAddImageButton(),
 
                   const SizedBox(height: 20),
 
-                  // Upload button (moved to the end). Text changed to "Share tool".
                   if (_selectedImages.isNotEmpty)
                     SizedBox(
                       width: double.infinity,
@@ -353,8 +337,8 @@ DropdownButtonFormField<String>(
           child: ElevatedButton.icon(
             onPressed: enabled
                 ? () =>
-                      _showImageSourceSheet() // NEW: open bottom sheet for picking
-                : null, // تعطيل الزر برمجياً
+                      _showImageSourceSheet()
+                : null,
             icon: const Icon(Icons.image, color: Colors.white),
             label: const Text(
               'Add Tool Image',
@@ -373,7 +357,6 @@ DropdownButtonFormField<String>(
     );
   }
 
-  // NEW: show modal bottom sheet styled exactly like idcard_image_picker (black draggable sheet)
   void _showImageSourceSheet() {
     showModalBottomSheet(
       context: context,
@@ -534,9 +517,6 @@ DropdownButtonFormField<String>(
       print('Camera pick error: $e');
     }
   }
-
-  // UPDATED: grid preview for multiple images (4 columns) with small 'X' to remove
-  // and an extra small add-tile (square with plus) as the last cell
   Widget _buildImageGrid() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -558,7 +538,6 @@ DropdownButtonFormField<String>(
             mainAxisSpacing: 8,
           ),
           itemBuilder: (context, index) {
-            // If last cell -> show add-tile
             if (index == _selectedImages.length &&
                 _selectedImages.length < _maxImages) {
               return GestureDetector(
@@ -570,7 +549,6 @@ DropdownButtonFormField<String>(
                   child: Container(
                     color: Colors.transparent,
                     child: Center(
-                      // nested smaller yellow square to make the "add" button appear smaller
                       child: Container(
                         margin: EdgeInsets.only(bottom: 15),
                         width: 55,

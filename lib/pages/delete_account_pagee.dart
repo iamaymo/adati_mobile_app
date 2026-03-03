@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:adati_mobile_app/services/auth_service.dart';
-import 'package:adati_mobile_app/pages/login_page.dart'; // للعودة بعد الحذف
+import 'package:adati_mobile_app/pages/login_page.dart';
 
 class DeleteAccountPage extends StatefulWidget {
   const DeleteAccountPage({super.key});
@@ -37,7 +37,6 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
       );
 
       if (response.statusCode == 204) {
-        // حذف التوكن محلياً وتوجيه المستخدم لصفحة تسجيل الدخول
         await AuthService.saveToken("");
         if (mounted) {
           _showSnackBar(

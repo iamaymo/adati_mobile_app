@@ -5,8 +5,6 @@ import 'package:adati_mobile_app/components/product_dialog.dart';
 import 'package:adati_mobile_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import '../components/cart.dart';
 import 'home_page.dart';
 
 class RentalSummaryPage extends StatelessWidget {
@@ -30,7 +28,7 @@ class RentalSummaryPage extends StatelessWidget {
     if (token == null || token.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى"),
+          content: Text("The session has ended, please log in again."),
           backgroundColor: Colors.red,
         ),
       );
@@ -39,7 +37,6 @@ class RentalSummaryPage extends StatelessWidget {
 
     final String transactionRef = (Random().nextInt(9000) + 1000).toString();
 
-    // إظهار مؤشر التحميل
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -77,13 +74,12 @@ class RentalSummaryPage extends StatelessWidget {
       }
     }
 
-    // إغلاق نافذة التحميل
     if (Navigator.canPop(context)) Navigator.pop(context);
 
     if (allSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("تم إرسال الطلب بنجاح!"),
+          content: Text("order submitted successfully!"),
           backgroundColor: Colors.green,
         ),
       );
@@ -95,7 +91,7 @@ class RentalSummaryPage extends StatelessWidget {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("حدث خطأ أثناء معالجة الطلب"),
+          content: Text("An error occurred while processing the request."),
           backgroundColor: Colors.red,
         ),
       );
@@ -104,12 +100,9 @@ class RentalSummaryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // إجمالي سعر الإيجار فقط
     double totalRentalFee = amount;
-    // إجمالي مبلغ الضمان (25% من قيمة الأدوات)
     double insuranceAmount =
         tools.fold(0.0, (sum, p) => sum + p.realValue) * 0.25;
-    // الإجمالي الكلي المطلوب دفعه الآن
     double grandTotal = totalRentalFee + insuranceAmount;
     return Scaffold(
       backgroundColor: Colors.white,
@@ -124,14 +117,12 @@ class RentalSummaryPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // content
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     ...tools.map((product) => _buildToolCard(product)).toList(),
-
                     const SizedBox(height: 10),
                     _buildInfoCard("Insurance Details", [
                       _buildRow(
@@ -146,13 +137,11 @@ class RentalSummaryPage extends StatelessWidget {
                       ),
                     ]),
                     _buildInsuranceNote(),
-
-                    // تفاصيل الدفع والمحفظة
                     _buildInfoCard("Payment Details", [
                       _buildRow("Wallet", walletName),
                       _buildRow("Wallet Phone Number", phoneNumber),
                       _buildRow("Rental Duration", "1 Day"),
-                      const Divider(height: 20), // فاصل بسيط قبل المبالغ
+                      const Divider(height: 20),
 
                       _buildRow(
                         "Rental Amount",
@@ -166,15 +155,13 @@ class RentalSummaryPage extends StatelessWidget {
                       const Divider(
                         thickness: 1,
                         height: 25,
-                      ), // خط عريض قبل الإجمالي
+                      ),
 
                       _buildRow(
                         "Total to Pay Now",
                         "YER ${grandTotal.toStringAsFixed(0)}",
                         isBold: true,
                       ),
-
-                      // السطر "الحبوب" الذي يوضح المبلغ المسترد
                       Container(
                         margin: const EdgeInsets.only(top: 8),
                         padding: const EdgeInsets.symmetric(
@@ -189,7 +176,6 @@ class RentalSummaryPage extends StatelessWidget {
                       ),
                     ]),
 
-                    // تحذير السياسة
                     _buildPolicyWarning(),
 
                     Padding(
@@ -230,7 +216,6 @@ class RentalSummaryPage extends StatelessWidget {
     );
   }
 
-  // الدوال المساعدة تم نقلها لداخل الكلاس ليتم التعرف عليها
   Widget _buildToolCard(Product p) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -358,7 +343,7 @@ class RentalSummaryPage extends StatelessWidget {
                 color: Colors.amber.shade900,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                height: 1.4, // لجعل النص مريحاً في القراءة
+                height: 1.4, 
               ),
             ),
           ),

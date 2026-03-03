@@ -6,7 +6,7 @@ import 'package:adati_mobile_app/services/auth_service.dart';
 import 'package:image_picker/image_picker.dart';
 
 class EditToolPost extends StatefulWidget {
-  final Map<String, dynamic> toolData; // استقبال بيانات الأداة الحالية
+  final Map<String, dynamic> toolData;
 
   const EditToolPost({super.key, required this.toolData});
 
@@ -36,7 +36,7 @@ class _EditToolPostState extends State<EditToolPost> {
             child: Align(
               alignment: Alignment.bottomCenter,
               child: DraggableScrollableSheet(
-                initialChildSize: 0.28, // رفعناه قليلاً ليناسب المحتوى
+                initialChildSize: 0.28, 
                 minChildSize: 0.2,
                 maxChildSize: 0.6,
                 builder: (context, scrollController) {
@@ -47,7 +47,7 @@ class _EditToolPostState extends State<EditToolPost> {
                       decoration: const BoxDecoration(
                         color: Colors.black,
                         borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(20), // زوايا أكثر نعومة
+                          top: Radius.circular(20),
                         ),
                       ),
                       child: Padding(
@@ -127,27 +127,24 @@ class _EditToolPostState extends State<EditToolPost> {
 
   static const int _maxImages = 3;
   List<dynamic> _selectedImages =
-      []; // قد تحتوي على String (مسارات قديمة) أو File (صور جديدة)
+      [];
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
 
-    // تنظيف السعر
     String rawPrice = widget.toolData['Tool_Price']?.toString() ?? "0";
     if (rawPrice.contains('.')) {
       rawPrice = rawPrice.split('.')[0];
     }
 
-    // تعبئة البيانات
     _nameController = TextEditingController(text: widget.toolData['Tool_Name']);
     _priceController = TextEditingController(text: rawPrice);
     _descriptionController = TextEditingController(
       text: widget.toolData['Tool_Description'],
     );
 
-    // ✅ السطر الناقص الذي سيقوم بعرض الصور فوراً
     _loadExistingImages();
   }
 
@@ -191,27 +188,21 @@ class _EditToolPostState extends State<EditToolPost> {
   Future<void> updateTool() async {
     setState(() => _isLoading = true);
     try {
-      // 1. تحديد الرابط الخاص بالأداة المحددة للتعديل
       final toolId = widget.toolData['Tool_ID'];
       final uri = Uri.parse('http://10.0.2.2:8000/api/tools/$toolId/');
 
-      // 2. استخدام PATCH بدلاً من PUT لتحديث الحقول المرسلة فقط
       var request = http.MultipartRequest('PATCH', uri);
       String? token = await AuthService.getToken();
       request.headers['Authorization'] = 'Bearer $token';
 
-      // 3. إضافة البيانات النصية
       request.fields['Tool_Name'] = _nameController.text;
       request.fields['Tool_Description'] = _descriptionController.text;
       request.fields['Tool_Price'] = _priceController.text;
 
-      // 4. التعامل مع الصور (نمر على القائمة ونضيف فقط الملفات الجديدة)
-      // ملاحظة: السيرفر يحتاج مسميات محددة Tool_Picture, Tool_Picture2, Tool_Picture3
       for (int i = 0; i < _selectedImages.length; i++) {
         String fieldName = (i == 0) ? 'Tool_Picture' : 'Tool_Picture${i + 1}';
 
         if (_selectedImages[i] is File) {
-          // إذا كان ملفاً جديداً، نقوم برفعه
           request.files.add(
             await http.MultipartFile.fromPath(
               fieldName,
@@ -219,12 +210,9 @@ class _EditToolPostState extends State<EditToolPost> {
             ),
           );
         } else {
-          // إذا كان نصاً (URL)، يعني أن الصورة لم تتغير، لا نرسل شيئاً لهذا الحقل
-          // السيرفر سيعتبره حقلاً لم يتغير ويحتفظ بالقديم بفضل الـ PATCH
         }
       }
 
-      // 5. إرسال الطلب
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
@@ -236,7 +224,7 @@ class _EditToolPostState extends State<EditToolPost> {
         Navigator.pop(
           context,
           true,
-        ); // نرجع true لنخبر الصفحة السابقة بضرورة التحديث
+        );
       } else {
         if (!mounted) return;
         print("Error body: ${response.body}");
@@ -298,7 +286,6 @@ class _EditToolPostState extends State<EditToolPost> {
                   ),
                   const SizedBox(height: 30),
 
-                  // زر الحفظ (نفس شكل زر المشاركة)
                   _buildLabel('Tool Images (Max 3)'),
                   const Text(
                     "The first image is the main display photo.",

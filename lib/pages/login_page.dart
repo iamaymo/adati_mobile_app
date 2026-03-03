@@ -38,8 +38,6 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (response.statusCode == 200) {
-        // final data = jsonDecode(response.body);
-        // print("Access Token: ${data['access']}");
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           await AuthService.saveToken(data['access']);
@@ -52,7 +50,6 @@ class _LoginPageState extends State<LoginPage> {
           );
         }
       } else {
-        // print("Error Body: ${response.body}");
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

@@ -1,6 +1,5 @@
 import 'package:adati_mobile_app/components/product_dialog.dart';
 import 'package:adati_mobile_app/pages/incoming_requests.dart';
-import 'package:adati_mobile_app/pages/order_tracking_page.dart';
 import 'package:adati_mobile_app/pages/setting_page.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -12,7 +11,7 @@ import '../components/my_textfield.dart';
 import '../components/filter_button.dart';
 import 'cart_page.dart';
 import 'favorite_page.dart';
-import 'profile_page.dart'; // 👈 استيراد صفحة البروفايل الجديدة
+import 'profile_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -30,7 +29,6 @@ class _Product {
   final String owner;
   final String description;
   final double realValue;
-  // أضف هذه الحقول الجديدة
   final String category;
   final String city;
 
@@ -43,38 +41,29 @@ class _Product {
     required this.owner,
     required this.description,
     required this.realValue,
-    required this.category, // أضف هنا
-    required this.city, // أضف هنا
+    required this.category,
+    required this.city,
   });
 
   factory _Product.fromJson(Map<String, dynamic> json) {
     final String city;
-    // 1. معالجة السعر
     String formattedPrice = "0";
     if (json['Tool_Price'] != null) {
       double? priceDouble = double.tryParse(json['Tool_Price'].toString());
       formattedPrice = priceDouble?.round().toString() ?? "0";
     }
 
-    // 2. جلب الصور من حقل all_pictures القادم من السيرفر
     List<String> collectedImages = [];
 
     if (json['all_pictures'] != null && json['all_pictures'] is List) {
-      // نأخذ القائمة الجاهزة من السيرفر مباشرة
       collectedImages = List<String>.from(
         json['all_pictures'].map((url) => url.toString()),
       );
     } else {
-      // حل احتياطي في حال فشل all_pictures
       if (json['Tool_Picture'] != null) {
         collectedImages.add(json['Tool_Picture']);
       }
     }
-
-    // 3. طباعة للتأكد (اختياري)
-    print(
-      "المنتج: ${json['Tool_Name']} - الصور النهائية: ${collectedImages.length}",
-    );
 
     double rv = double.tryParse(json['real_value']?.toString() ?? '0.0') ?? 0.0;
     return _Product(
@@ -87,7 +76,6 @@ class _Product {
       description: json['Tool_Description'] ?? "",
       realValue:
           double.tryParse(json['real_value']?.toString() ?? '0.0') ?? 0.0,
-      // تأكد أن هذه المفاتيح تطابق ما يرسله السيرفر (Django)
       category: json['Tool_Category'] ?? "Uncategorized",
       city: json['owner_city'] ?? "Unknown",
     );
@@ -112,7 +100,7 @@ class _HomePageState extends State<HomePage> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          backgroundColor: Colors.black, // خلفية سوداء
+          backgroundColor: Colors.black,
           title: Text(
             "Access Denied",
             style: TextStyle(color: Theme.of(context).colorScheme.tertiary),
@@ -140,7 +128,7 @@ class _HomePageState extends State<HomePage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(
                   context,
-                ).colorScheme.primary, // زر أساسي
+                ).colorScheme.primary,
               ),
               child: const Text(
                 "Login or Register",
@@ -163,13 +151,11 @@ class _HomePageState extends State<HomePage> {
   void _filterTools(String? selectedCategory, String? selectedCity) {
     setState(() {
       filteredProducts = products.where((tool) {
-        // فلترة الفئة: إذا كانت 'All' أو null نمرر الكل، وإلا نقارن
         bool matchesCat =
             (selectedCategory == null || selectedCategory == 'All')
             ? true
             : tool.category == selectedCategory;
 
-        // فلترة المدينة: نفس المنطق
         bool matchesCity = (selectedCity == null || selectedCity == 'All')
             ? true
             : tool.city == selectedCity;
@@ -182,7 +168,6 @@ class _HomePageState extends State<HomePage> {
   void _applyLocalFilter(String? category, String? city) {
     setState(() {
       filteredProducts = products.where((product) {
-        // إذا اختار 'All' أو لم يختار شيئاً، اعتبر الشرط محققاً (true)
         final bool matchesCategory = (category == null || category == 'All')
             ? true
             : product.category == category;
@@ -214,7 +199,7 @@ class _HomePageState extends State<HomePage> {
     if (token == null) {
       setState(() {
         userName = "Guest";
-        currentUserId = null; // لا يوجد ID للمستخدم الزائر
+        currentUserId = null;
         isLoading = false;
       });
       return;
@@ -228,7 +213,7 @@ class _HomePageState extends State<HomePage> {
         final data = json.decode(response.body);
         setState(() {
           userName = data['User_Name'] ?? "User";
-          currentUserId = data['User_ID'] ?? 0; // جلب الـ ID الخاص بك
+          currentUserId = data['User_ID'] ?? 0;
         });
       }
     } catch (e) {
@@ -242,7 +227,6 @@ class _HomePageState extends State<HomePage> {
     setState(() => isLoading = true);
 
     final token = await AuthService.getToken();
-    // بناء الرابط مع إضافة Query Parameters للفلترة
     var uri = Uri.parse('http://10.0.2.2:8000/api/tools/').replace(
       queryParameters: {
         if (category != null) 'category': category,
@@ -264,11 +248,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> fetchTools({String? category, String? city}) async {
-    setState(() => isLoading = true); // تفعيل مؤشر التحميل
+    setState(() => isLoading = true);
 
     final token = await AuthService.getToken();
 
-    // بناء الرابط مع بارامترات الفلترة
     final Map<String, String> queryParameters = {};
     if (category != null && category != 'All')
       queryParameters['category'] = category;
@@ -286,12 +269,11 @@ class _HomePageState extends State<HomePage> {
       );
 
       if (response.statusCode == 200) {
-        // فك التشفير ودعم العربية
         List<dynamic> data = json.decode(utf8.decode(response.bodyBytes));
         if (mounted) {
           setState(() {
             products = data.map((item) => _Product.fromJson(item)).toList();
-            filteredProducts = products; // في البداية نعرض كل شيء
+            filteredProducts = products;
             isLoading = false;
           });
         }
@@ -319,8 +301,6 @@ class _HomePageState extends State<HomePage> {
     if (hour >= 17 && hour < 21) return 'Good Evening!';
     return 'Good Night!';
   }
-
-  // دالة اختيار الصفحة بناءً على الـ Index
   Widget _getSelectedPage() {
     switch (bottomNavIndex) {
       case 0:
@@ -330,7 +310,7 @@ class _HomePageState extends State<HomePage> {
       case 2:
         return const FavoritePage();
       case 3:
-        return const ProfilePage(); // 👈 تم ربط صفحة البروفايل هنا
+        return const ProfilePage();
       default:
         return _buildMainContent();
     }
@@ -537,9 +517,9 @@ class _HomePageState extends State<HomePage> {
         Expanded(
           child: MyTextField(
             label: 'Search tools...',
-            controller: _searchController, // مرر المتحكم هنا
+            controller: _searchController,
             onChanged: (value) =>
-                _searchTools(value), // استدعاء دالة البحث عند كل حرف
+                _searchTools(value),
           ),
         ),
         const SizedBox(width: 12),

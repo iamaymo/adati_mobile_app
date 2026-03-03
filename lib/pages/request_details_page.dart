@@ -83,7 +83,6 @@ class RequestDetailsPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Tool Image
             if (order['tool_image'] != null)
               Container(
                 width: double.infinity,
@@ -104,7 +103,6 @@ class RequestDetailsPage extends StatelessWidget {
                 ),
               ),
 
-            // Tool Information Section
             _buildSectionHeader("Tool Information"),
             _buildInfoBox([
               _buildInfoRow("Tool Name", order['tool_name']),
@@ -113,7 +111,6 @@ class RequestDetailsPage extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // Customer Information Section
             _buildSectionHeader("Customer Details"),
             _buildInfoBox([
               _buildInfoRow("Name", order['customer_name']),
@@ -127,12 +124,8 @@ class RequestDetailsPage extends StatelessWidget {
             ]),
 
             const SizedBox(height: 20),
-            // 1. حساب مبلغ الضمان برمجياً للعرض
-
-            // 2. إضافة العنوان (Section Header)
             _buildSectionHeader("Security & Insurance"),
 
-            // 3. إضافة صندوق معلومات الضمان
             _buildInfoBox([
               _buildInfoRow(
                 "Insurance Amount",
@@ -141,12 +134,11 @@ class RequestDetailsPage extends StatelessWidget {
               _buildInfoRow(
                 "Status",
                 "Held by System",
-              ), // بما أن الطلب لسه ما انقبل، الحالة محجوزة
+              ),
             ]),
 
             const SizedBox(height: 12),
 
-            // 4. ملاحظة طمأنة للمؤجر (اختياري)
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -176,8 +168,6 @@ class RequestDetailsPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Earnings Card
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -211,7 +201,6 @@ class RequestDetailsPage extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // Action Buttons
             Container(
               margin: const EdgeInsets.only(bottom: 15),
               child: Row(
@@ -275,12 +264,11 @@ class RequestDetailsPage extends StatelessWidget {
     );
   }
 
-  // المربع الرمادي الشفاف الذي يجمع المعلومات
   Widget _buildInfoBox(List<Widget> children) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.06), // خلفية رمادية خفيفة جداً
+        color: Colors.grey.withOpacity(0.06),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Column(children: children),
@@ -288,7 +276,6 @@ class RequestDetailsPage extends StatelessWidget {
   }
 
   Widget _buildRatingRow(String label, dynamic ratingValue) {
-    // تحويل القيمة إلى double سواء كانت String أو int من قاعدة البيانات
     double rating = double.tryParse(ratingValue?.toString() ?? '0') ?? 0;
 
     return Padding(
@@ -302,7 +289,6 @@ class RequestDetailsPage extends StatelessWidget {
           ),
           Row(
             children: [
-              // عرض النجوم
               ...List.generate(5, (index) {
                 return Icon(
                   index < rating ? Icons.star : Icons.star_border,

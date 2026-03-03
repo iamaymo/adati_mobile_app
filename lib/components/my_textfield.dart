@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 
-// ===============================================
-// 1. MyTextField (الحقل العادي)
-// ===============================================
-
 class MyTextField extends StatefulWidget {
   final String label;
   final FormFieldValidator<String>? validator;
@@ -11,7 +7,7 @@ class MyTextField extends StatefulWidget {
   final bool? enabled;
   final TextInputType? keyboardType;
   final bool obscureText;
-  final Function(String)? onChanged; // 👈 1. أضف هذا السطر
+  final Function(String)? onChanged;
 
   const MyTextField({
     super.key,
@@ -21,7 +17,7 @@ class MyTextField extends StatefulWidget {
     this.enabled,
     this.keyboardType,
     this.obscureText = false,
-    this.onChanged, // 👈 2. وأضف هذا السطر هنا
+    this.onChanged,
   });
 
   @override
@@ -29,7 +25,6 @@ class MyTextField extends StatefulWidget {
 }
 
 class _MyTextFieldState extends State<MyTextField> {
-  // المتحكم الداخلي (يستخدم إذا لم يتم تمرير متحكم خارجي)
   TextEditingController? _controller;
 
   @override
@@ -38,12 +33,10 @@ class _MyTextFieldState extends State<MyTextField> {
     _controller = widget.controller ?? TextEditingController();
   }
 
-  // ⭐️ مهم: تصحيح الوصول إلى المتحكم الداخلي ⭐️
   @override
   void didUpdateWidget(covariant MyTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
-      // إذا كان المتحكم القديم داخليًا، تخلص منه (نستخدم `_controller` مباشرةً)
       if (oldWidget.controller == null) {
         _controller?.dispose();
       }
@@ -53,7 +46,6 @@ class _MyTextFieldState extends State<MyTextField> {
 
   @override
   void dispose() {
-    // التخلص من المتحكم فقط إذا كان داخليًا
     if (widget.controller == null) {
       _controller?.dispose();
     }
@@ -100,10 +92,6 @@ class _MyTextFieldState extends State<MyTextField> {
   }
 }
 
-// ===============================================
-// 2. MyTextFieldWS (حقل كلمة المرور مع زر الإظهار/الإخفاء)
-// ===============================================
-
 class MyTextFieldWS extends StatefulWidget {
   final String label;
   final FormFieldValidator<String>? validator;
@@ -133,12 +121,10 @@ class _MyTextFieldWSState extends State<MyTextFieldWS> {
     _controller = widget.controller ?? TextEditingController();
   }
 
-  // ⭐️ مهم: تصحيح الوصول إلى المتحكم الداخلي ⭐️
   @override
   void didUpdateWidget(covariant MyTextFieldWS oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
-      // إذا كان المتحكم القديم داخليًا، تخلص منه (نستخدم `_controller` مباشرةً)
       if (oldWidget.controller == null) {
         _controller?.dispose();
       }

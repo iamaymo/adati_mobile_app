@@ -20,17 +20,16 @@ class _ReportProblemPageState extends State<ReportProblemPage> {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController detailsController = TextEditingController();
 
-  // أنواع المشاكل المتوقعة في التطبيق
   final List<String> problemCategories = [
-    'Security Deposit Not Refunded', // الضمانة ما رجعت
+    'Security Deposit Not Refunded',
     'Late Tool Return',
-    'Tool Not Delivered', // الأداة ما وصلت من الدليفري
-    'Renter Did Not Return Tool', // المستأجر ما رجع الأداة
-    'Damaged Tool Received', // استلام أداة تالفة
-    'Technical Problem (App)', // مشكلة تقنية في التطبيق
-    'Fraud or Scam Attempt', // محاولة احتيال
-    'User Misbehavior', // سوء سلوك مستخدم
-    'Other Issues', // مشاكل أخرى
+    'Tool Not Delivered',
+    'Renter Did Not Return Tool',
+    'Damaged Tool Received',
+    'Technical Problem (App)',
+    'Fraud or Scam Attempt',
+    'User Misbehavior',
+    'Other Issues',
   ];
 
   @override
@@ -41,7 +40,6 @@ class _ReportProblemPageState extends State<ReportProblemPage> {
         padding: const EdgeInsets.only(top: 50),
         child: Column(
           children: [
-            // الهيدر
             Container(
               alignment: Alignment.centerLeft,
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
@@ -87,21 +85,17 @@ class _ReportProblemPageState extends State<ReportProblemPage> {
                       _buildProblemTypeDropdown(),
 
                       const SizedBox(height: 30),
-
-                      // إذا كانت مشكلة تقنية، نظهر نصيحة سريعة أولاً (FAQ)
                       if (selectedProblemType == 'Technical Problem')
                         _buildQuickHintCard(
                           "App not working correctly?",
                           "Try clearing the app cache or updating to the latest version. If the problem persists, please fill out the form below.",
                         ),
-                      // نصيحة تظهر عند اختيار "تأخر في الإرجاع"
                       if (selectedProblemType == 'Late Tool Return')
                         _buildQuickHintCard(
                           "Late Return Policy",
                           "Have you tried contacting the renter? Sometimes delays happen. If they don't respond within 3 hours, please complete this report so we can take action.",
                         ),
 
-                      // إذا تم اختيار أي نوع مشكلة، يظهر نموذج المراسلة
                       if (selectedProblemType != null) ...[
                         if (selectedProblemType ==
                             'Security Deposit Not Refunded')
@@ -121,8 +115,6 @@ class _ReportProblemPageState extends State<ReportProblemPage> {
                             "App Troubleshooting",
                             "Try clearing the app cache or updating to the latest version. If the problem persists, please fill out the form.",
                           ),
-
-                        // نموذج المراسلة يظهر دائماً بعد اختيار النوع
                         _buildFormSection(
                           title: "Report Details",
                           subtitle:
@@ -143,7 +135,6 @@ class _ReportProblemPageState extends State<ReportProblemPage> {
     );
   }
 
-  // اختيار نوع المشكلة
   Widget _buildProblemTypeDropdown() {
     return Container(
       decoration: BoxDecoration(
@@ -372,7 +363,6 @@ class _ReportProblemPageState extends State<ReportProblemPage> {
   }
 
   Future<void> _submitReport() async {
-    // 1. التحقق من الحقول
     if (emailController.text.isEmpty ||
         detailsController.text.isEmpty ||
         selectedProblemType == null) {
@@ -385,9 +375,7 @@ class _ReportProblemPageState extends State<ReportProblemPage> {
       return;
     }
 
-    setState(
-      () => isFormExpanded = false,
-    ); // إغلاق النموذج أثناء التحميل (اختياري)
+    setState(() => isFormExpanded = false);
 
     try {
       final String? token = await AuthService.getToken();
@@ -414,7 +402,6 @@ class _ReportProblemPageState extends State<ReportProblemPage> {
           ),
         );
 
-        // إفراغ الحقول والعودة للخلف بعد ثانية
         emailController.clear();
         phoneController.clear();
         detailsController.clear();

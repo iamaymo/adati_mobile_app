@@ -6,10 +6,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 class SupportHelpPage extends StatelessWidget {
   SupportHelpPage({super.key});
 
-  // لون الهوية البصرية للتطبيق
   final Color themeYellow = const Color(0xFFFBC02D);
 
-  // --- دالة لفتح الروابط الخارجية (واتساب، تليجرام، إيميل) ---
   Future<void> _launchURL(String url) async {
     final Uri uri = Uri.parse(url);
     try {
@@ -21,7 +19,6 @@ class SupportHelpPage extends StatelessWidget {
     }
   }
 
-  // --- نافذة خيارات الدردشة (WhatsApp & Telegram) ---
   void _showChatOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -55,7 +52,6 @@ class SupportHelpPage extends StatelessWidget {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.pop(context);
-                  // استبدل الرقم بالرقم الخاص بك (كود الدولة + الرقم)
                   _launchURL("https://wa.me/967777000000");
                 },
               ),
@@ -67,7 +63,6 @@ class SupportHelpPage extends StatelessWidget {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.pop(context);
-                  // استبدل Username بمعرف التليجرام الخاص بك
                   _launchURL("https://t.me/Your_Telegram_Username");
                 },
               ),
@@ -101,7 +96,6 @@ class SupportHelpPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- قسم الترحيب ---
             Center(
               child: Column(
                 children: [
@@ -120,8 +114,6 @@ class SupportHelpPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 35),
-
-            // --- خيارات التواصل السريع ---
             const Text(
               "Contact Us Directly",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -145,8 +137,6 @@ class SupportHelpPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 35),
-
-            // --- قسم الأسئلة الشائعة FAQ ---
             const Text(
               "Frequently Asked Questions",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -166,8 +156,6 @@ class SupportHelpPage extends StatelessWidget {
             ),
 
             const SizedBox(height: 40),
-
-            // --- زر تقديم بلاغ رسمي ---
             _buildReportBanner(context),
             const SizedBox(height: 40),
           ],
@@ -175,8 +163,6 @@ class SupportHelpPage extends StatelessWidget {
       ),
     );
   }
-
-  // --- ويدجت بطاقة التواصل ---
   Widget _buildContactCard({
     required IconData icon,
     required String label,
@@ -209,7 +195,6 @@ class SupportHelpPage extends StatelessWidget {
     );
   }
 
-  // --- ويدجت الأسئلة الشائعة ---
   Widget _buildFAQTile(String question, String answer) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -231,7 +216,6 @@ class SupportHelpPage extends StatelessWidget {
     );
   }
 
-  // --- بنر التبليغ عن مشكلة ---
   Widget _buildReportBanner(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),

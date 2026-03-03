@@ -22,10 +22,8 @@ class _RegisterPageState extends State<RegisterPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
 
-  // ⭐️ تحديد العنوان في مكان واضح ⭐️
   static const String baseUrl = 'http://10.0.2.2:8000/api';
 
-  // 1. تعريف المتحكمات
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -34,7 +32,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _districtController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  // New: Yemen cities and selected city
   final List<String> _yemenCities = [
     "Sana'a",
     "Aden",
@@ -75,15 +72,12 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  // Replace previous registerUser() with this multipart version that accepts imagePath
-  // أضفنا مسارين للصور كباراميترز
   Future<void> registerUser(String frontPath, String? backPath) async {
     final url = Uri.parse('$baseUrl/register/');
 
     try {
       var request = http.MultipartRequest('POST', url);
 
-      // 1. الحقول النصية
       request.fields['User_Name'] =
           "${_firstNameController.text.trim()} ${_lastNameController.text.trim()}";
       request.fields['User_Email'] = _emailController.text.trim();
@@ -92,19 +86,15 @@ class _RegisterPageState extends State<RegisterPage> {
       request.fields['Street'] = _districtController.text.trim();
       request.fields['password'] = _passwordController.text;
 
-      // 2. إرفاق صورة البطاقة الأمامية (إجبارية)
       request.files.add(
         await http.MultipartFile.fromPath('ID_Card_Image_Front', frontPath),
       );
 
-      // 3. إرفاق صورة البطاقة الخلفية (اختيارية حسب تصميمك)
       if (backPath != null) {
         request.files.add(
           await http.MultipartFile.fromPath('ID_Card_Image_Back', backPath),
         );
       }
-
-      // ملاحظة: إذا كنت تريد رفع صورة البروفايل هنا أيضاً أضف حقل 'Profile_Image' بنفس الطريقة
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
@@ -130,7 +120,6 @@ class _RegisterPageState extends State<RegisterPage> {
           (route) => false,
         );
       } else {
-        // عرض رسالة الخطأ من السيرفر (مهم جداً لمعرفة لو في حقل ناقص)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Registration failed: ${response.body}'),
@@ -171,18 +160,16 @@ class _RegisterPageState extends State<RegisterPage> {
                     key: _formKey,
                     child: Column(
                       children: [
-                        // Row 1: First Name & Last Name (مربوطة بالمتحكمات)
                         Row(
                           children: [
                             Expanded(
                               child: MyTextField(
-                                controller: _firstNameController, // 👈 ربط
+                                controller: _firstNameController,
                                 label: "First Name",
                                 validator: (value) {
                                   final v = value?.trim() ?? '';
                                   if (v.isEmpty)
                                     return "First name is required";
-                                  // Allow Arabic and Latin letters, spaces, hyphen/apostrophe; min 2 chars
                                   if (!RegExp(
                                     r"^[\u0600-\u06FFa-zA-Z\s'\-]{2,}$",
                                   ).hasMatch(v)) {
@@ -196,7 +183,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             Expanded(
                               child: MyTextField(
                                 label: "Last Name",
-                                controller: _lastNameController, // 👈 ربط
+                                controller: _lastNameController,
                                 validator: (value) {
                                   final v = value?.trim() ?? '';
                                   if (v.isEmpty) return "Last name is required";
@@ -212,11 +199,9 @@ class _RegisterPageState extends State<RegisterPage> {
                           ],
                         ),
                         const SizedBox(height: 15),
-
-                        // Row 2: Email (مربوطة بالمتحكم)
                         MyTextField(
                           label: "Email",
-                          controller: _emailController, // 👈 ربط
+                          controller: _emailController,
                           validator: (value) {
                             final v = value?.trim() ?? '';
                             if (v.isEmpty) return "Email is required";
@@ -227,8 +212,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           },
                         ),
                         const SizedBox(height: 15),
-
-                        // Row 3: Phone Number
                         Row(
                           children: [
                             SizedBox(
@@ -243,27 +226,23 @@ class _RegisterPageState extends State<RegisterPage> {
                             Expanded(
                               child: MyTextField(
                                 label: "Phone Number",
-                                controller: _phoneNumberController, // 👈 ربط
+                                controller: _phoneNumberController,
                                 keyboardType: TextInputType.number,
                                 validator: (value) {
                                   final v = value?.trim() ?? '';
                                   if (v.isEmpty) {
                                     return "Phone number is required";
                                   }
-                                  // 1) Check length first
                                   if (v.length != 9) {
                                     return "Phone must be exactly 9 digits";
                                   }
-                                  // 2) Check first digit
                                   if (!v.startsWith('7')) {
                                     return "Phone must start with 7";
                                   }
-                                  // 3) Check second digit allowed set
                                   final second = v[1];
                                   if (!'7310'.contains(second)) {
                                     return "Second digit must be one of: 7, 3, 1, or 0";
                                   }
-                                  // Optional: ensure all characters are digits
                                   if (!RegExp(r'^\d{9}$').hasMatch(v)) {
                                     return "Phone must contain only digits";
                                   }
@@ -274,8 +253,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           ],
                         ),
                         const SizedBox(height: 15),
-
-                        // Row 4: City & District
                         Row(
                           children: [
                             Expanded(
@@ -345,7 +322,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             Expanded(
                               child: MyTextField(
                                 label: "Street",
-                                controller: _districtController, // 👈 ربط
+                                controller: _districtController,
                                 validator: (value) {
                                   if (value == null || value.trim().isEmpty) {
                                     return "Street is required";
@@ -357,12 +334,9 @@ class _RegisterPageState extends State<RegisterPage> {
                           ],
                         ),
                         const SizedBox(height: 15),
-
-                        // Row 5: Password
-                        // نفترض أن MyTextFieldWS هو حقل إدخال كلمة المرور الخاص بك
                         MyTextFieldWS(
                           label: "Password",
-                          controller: _passwordController, // 👈 ربط
+                          controller: _passwordController,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return "Password is required";
@@ -382,7 +356,6 @@ class _RegisterPageState extends State<RegisterPage> {
                         ? null
                         : () async {
                             if (_formKey.currentState?.validate() ?? false) {
-                              // 1. الانتقال لصفحة التقاط الصور وانتظار النتيجة
                               final dynamic imageResult = await Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -391,11 +364,9 @@ class _RegisterPageState extends State<RegisterPage> {
                                 ),
                               );
 
-                              // 2. التأكد من أن المستخدم التقط الصور (الأمامية على الأقل)
                               if (imageResult != null &&
                                   imageResult is Map &&
                                   imageResult['front'] != null) {
-                                // 3. الانتقال لصفحة السياسات والشروط
                                 final bool? isAgreed = await Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -407,10 +378,9 @@ class _RegisterPageState extends State<RegisterPage> {
                                 if (isAgreed == true) {
                                   setState(() => _isLoading = true);
                                   try {
-                                    // ✅ التعديل هنا: نرسل المسار الأمامي والخلفي للدالة
                                     await registerUser(
                                       imageResult['front'],
-                                      imageResult['back'], // قد يكون null وهذا مسموح به في الدالة
+                                      imageResult['back'],
                                     );
                                   } finally {
                                     if (mounted)
@@ -418,7 +388,6 @@ class _RegisterPageState extends State<RegisterPage> {
                                   }
                                 }
                               } else {
-                                // اختياري: تنبيه المستخدم بضرورة إكمال الصور
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text(
@@ -475,7 +444,7 @@ class _RegisterPageState extends State<RegisterPage> {
             color: Colors.black.withOpacity(0.5),
             child: Center(
               child: CircularProgressIndicator(
-                color: Theme.of(context).colorScheme.primary, // لون تط
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
           ),

@@ -57,7 +57,6 @@ class _OperationsPageState extends State<OperationsPage> {
               return const Center(child: Text("No rental requests yet"));
             }
 
-            // --- منطق الفرز هنا ---
             final allOrders = snapshot.data!;
             final activeOrders = allOrders
                 .where(
@@ -101,7 +100,6 @@ class _OperationsPageState extends State<OperationsPage> {
     );
   }
 
-  // ويدجت الفاصل مع النص في المنتصف
   Widget _buildSectionDivider(String label) {
     return Row(
       children: [
@@ -121,16 +119,14 @@ class _OperationsPageState extends State<OperationsPage> {
 
   Widget _buildOrderCard(dynamic order) {
     String status = order['Order_Status'];
-    // تعريف الحالات المنتهية
     bool isInactive =
         status == 'Completed' || status == 'Cancelled' || status == 'Rejected';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: isInactive ? 0.5 : 2, // تقليل الظل للطلبات المنتهية
+      elevation: isInactive ? 0.5 : 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: ListTile(
-        // جعل الطلبات المكتملة باهتة قليلاً للتمييز
         contentPadding: const EdgeInsets.all(12),
         leading: Opacity(
           opacity: isInactive ? 0.6 : 1.0,

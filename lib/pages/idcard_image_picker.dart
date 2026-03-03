@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-// Note: Ensure your local path for MyButton is correct
 import 'package:adati_mobile_app/components/my_button.dart';
 
 class IdcardImagePicker extends StatefulWidget {
@@ -16,7 +15,6 @@ class _IdcardImagePickerState extends State<IdcardImagePicker> {
   String? _frontImagePath;
   String? _backImagePath;
 
-  // Check if front side is uploaded (was requiring both sides)
   bool get _isFormValid => _frontImagePath != null;
 
   Future<void> _pickImage(ImageSource source, String target) async {
@@ -184,22 +182,20 @@ class _IdcardImagePickerState extends State<IdcardImagePicker> {
                 ),
               ),
               const SizedBox(height: 12),
-
-              // REGISTER BUTTON SECTION
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: MyButton(
                   onPressed: _isFormValid
                       ? () {
-                          // نغلق الصفحة ونعيد مسارات الصور لصفحة الـ Register
+                          
                           Navigator.pop(context, {
-  'front': _frontImagePath, // المسار الذي حصلت عليه من الكاميرا
-  'back': _backImagePath,   // المسار الذي حصلت عليه من الكاميرا
+  'front': _frontImagePath,
+  'back': _backImagePath,
 });
                         }
-                      : null, // الزر يكون معطل حتى يختار الصورة
-                  label: 'Continue', // غيرنا النص ليكون أنسب للمرحلة التالية
+                      : null,
+                  label: 'Continue',
                 ),
               ),
               const SizedBox(height: 12),
@@ -315,10 +311,10 @@ class _IdcardImagePickerState extends State<IdcardImagePicker> {
           width: double.infinity,
           height: 50,
           child: Container(
-            height: 45, // يمكنك التحكم في الطول
+            height: 45,
             child: CustomPaint(
               painter: _DashedBorderPainter(
-                color: const Color(0xFFFBC02D), // اللون الأصفر
+                color: const Color(0xFFFBC02D),
                 strokeWidth: 2,
                 borderRadius: 12,
               ),
@@ -334,7 +330,7 @@ class _IdcardImagePickerState extends State<IdcardImagePicker> {
                   child: Text(
                     'Change',
                     style: TextStyle(
-                      color: Color(0xFFFBC02D), // النص باللون الأصفر أيضاً
+                      color: Color(0xFFFBC02D),
                       fontWeight: FontWeight.bold,
                     ),
                   ),

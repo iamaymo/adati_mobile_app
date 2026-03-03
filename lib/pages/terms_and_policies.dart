@@ -5,7 +5,6 @@ class TermsAndPoliciesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // توحيد لون الهوية البصرية للتطبيق
     const Color themeYellow = Color(0xFFFBC02D);
     const Color textColor = Color(0xFF1A1A1A);
     const Color subTextColor = Color(0xFF666666);
@@ -39,7 +38,6 @@ class TermsAndPoliciesPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- قسم الترويسة ---
               const Text(
                 'Welcome to Adati 👋',
                 style: TextStyle(
@@ -71,7 +69,6 @@ class TermsAndPoliciesPage extends StatelessWidget {
               const Divider(thickness: 1, color: Color(0xFFEEEEEE)),
               const SizedBox(height: 16),
 
-              // --- بنود السياسة ---
               _buildSectionTitle(
                 '1. Payments & Commission',
                 Icons.payments_outlined,
@@ -135,7 +132,6 @@ class TermsAndPoliciesPage extends StatelessWidget {
     );
   }
 
-  // ويدجت عنوان القسم مع أيقونة بسيطة
   Widget _buildSectionTitle(String title, IconData icon) {
     return Padding(
       padding: const EdgeInsets.only(top: 24, bottom: 12),
@@ -156,7 +152,6 @@ class TermsAndPoliciesPage extends StatelessWidget {
     );
   }
 
-  // ويدجت النقطة
   Widget _buildBulletPoint(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10, left: 4),

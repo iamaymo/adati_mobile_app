@@ -223,7 +223,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 }
 
-// ويدجت عرض المعلومات الشخصية (دمج التصميمين)
 class _InfoTile extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -278,7 +277,6 @@ class _InfoTile extends StatelessWidget {
   }
 }
 
-// ويدجت الإحصائيات (StatCard المطور)
 class _StatBox extends StatelessWidget {
   final String title;
   final String value;
@@ -325,7 +323,6 @@ class _StatBox extends StatelessWidget {
   }
 }
 
-// ويدجت القوائم التفاعلية
 class _ActionMenu extends StatelessWidget {
   final IconData icon;
   final String title;

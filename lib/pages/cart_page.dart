@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../components/cart.dart';
 import '../components/product_dialog.dart';
-import '../components/payment_sheet.dart'; // added
-import '../components/my_button.dart'; // added
+import '../components/payment_sheet.dart';
+import '../components/my_button.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({Key? key}) : super(key: key);
@@ -30,10 +30,7 @@ class _CartPageState extends State<CartPage> {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
           },
-          body: jsonEncode({
-            'Tool_ID': product.id, // تأكد أن موديل Product يحتوي على id
-            // السيرفر سيتولى حساب السعر والتواريخ في perform_create
-          }),
+          body: jsonEncode({'Tool_ID': product.id}),
         );
 
         if (response.statusCode == 201 || response.statusCode == 200) {
@@ -49,7 +46,6 @@ class _CartPageState extends State<CartPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Successfully rented $successCount tools!")),
       );
-      // يمكنك هنا التوجيه لصفحة "طلباتي"
     }
   }
 
@@ -97,13 +93,8 @@ class _CartPageState extends State<CartPage> {
                             ? p.images[0]
                             : '');
                         return GestureDetector(
-                          // عند الضغط على المنتج في السلة، يتم استدعاء الدالة showProductDialog
                           onTap: () {
-                            showProductDialog(
-                              context,
-                              p,
-                              null, // أو مرر ID المستخدم الحالي إذا كان متوفراً لديك
-                            );
+                            showProductDialog(context, p, null);
                           },
                           child: Container(
                             padding: const EdgeInsets.all(12),
@@ -214,7 +205,6 @@ class _CartPageState extends State<CartPage> {
                   child: SizedBox(
                     width: double.infinity,
                     child: MyButton(
-                      // make button smaller
                       width: 0.9,
                       height: 0.06,
                       label: 'Rent Now',
@@ -226,12 +216,10 @@ class _CartPageState extends State<CartPage> {
                                 amount: Cart.instance.totalPrice(),
                                 selectedTools: items,
                                 onPaid: () async {
-                                  // بدلاً من clear فقط، سنقوم بالإرسال للسيرفر
                                   await _processCheckout(items);
                                 },
                               );
                             },
-                      // optional: override colors (MyButton defaults use theme)
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       textColor: Theme.of(context).colorScheme.onPrimary,
                     ),

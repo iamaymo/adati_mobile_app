@@ -10,7 +10,6 @@ class FilterButton extends StatefulWidget {
 }
 
 class _FilterButtonState extends State<FilterButton> {
-  // قائمة الفئات
   final List<String> categories = [
     'All',
     'Electrical',
@@ -21,7 +20,6 @@ class _FilterButtonState extends State<FilterButton> {
     'Gardening',
   ];
 
-  // قائمة المدن اليمنية كاملة
   final List<String> yemenCities = [
     'All',
     "Sana'a",
@@ -46,7 +44,6 @@ class _FilterButtonState extends State<FilterButton> {
     "Al Mahrah",
   ];
 
-  // متغيرات لحفظ القيم المختارة (للمحافظة عليها حتى بعد إغلاق الديالوج)
   String? selectedCategory;
   String? selectedCity;
 
@@ -54,12 +51,12 @@ class _FilterButtonState extends State<FilterButton> {
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFFFFC72C), // اللون الأصفر
-        foregroundColor: Colors.black, // لون الأيقونة
+        backgroundColor: const Color(0xFFFFC72C),
+        foregroundColor: Colors.black,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: EdgeInsets.zero,
-        minimumSize: const Size(54, 54), // لضبط الطول مع حقل البحث
+        minimumSize: const Size(54, 54),
       ),
       onPressed: () => _openFilterDialog(context),
       child: const Icon(Icons.filter_list, size: 28),
@@ -90,7 +87,6 @@ class _FilterButtonState extends State<FilterButton> {
                   ),
                   const SizedBox(height: 20),
 
-                  // 1. اختيار الفئة
                   _buildDropdown(
                     hint: 'Tool Category',
                     value: selectedCategory,
@@ -99,8 +95,6 @@ class _FilterButtonState extends State<FilterButton> {
                         setDialogState(() => selectedCategory = v),
                   ),
                   const SizedBox(height: 12),
-
-                  // 2. اختيار المدينة (City)
                   _buildDropdown(
                     hint: 'City',
                     value: selectedCity,
@@ -112,7 +106,6 @@ class _FilterButtonState extends State<FilterButton> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      // زر الإلغاء
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),
                         child: const Text(
@@ -121,7 +114,6 @@ class _FilterButtonState extends State<FilterButton> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // زر التطبيق
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFFFC72C),
@@ -131,7 +123,6 @@ class _FilterButtonState extends State<FilterButton> {
                           ),
                         ),
                         onPressed: () {
-                          // إرسال القيم المختارة إلى الصفحة الرئيسية
                           widget.onApply(selectedCategory, selectedCity);
                           Navigator.of(context).pop();
                         },
@@ -148,7 +139,6 @@ class _FilterButtonState extends State<FilterButton> {
     );
   }
 
-  // الـ Widget الموحد للقوائم المنسدلة مع إجبار اللون الأبيض
   Widget _buildDropdown({
     required String hint,
     required String? value,
@@ -170,7 +160,6 @@ class _FilterButtonState extends State<FilterButton> {
           )
           .toList(),
       onChanged: enabled ? onChanged : null,
-      // الـ Hint باللون الأبيض الصريح
       hint: Text(
         hint,
         style: TextStyle(

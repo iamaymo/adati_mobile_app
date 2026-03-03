@@ -5,7 +5,6 @@ class Cart {
   Cart._();
   static final Cart instance = Cart._();
 
-  // Notifies listeners when items change
   final ValueNotifier<List<Product>> items = ValueNotifier<List<Product>>([]);
 
   void add(Product p) {

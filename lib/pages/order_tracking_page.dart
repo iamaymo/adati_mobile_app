@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:adati_mobile_app/pages/report_problem_page.dart';
 import 'package:adati_mobile_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
@@ -22,13 +21,9 @@ class OrderTrackingPage extends StatefulWidget {
 }
 
 class _OrderTrackingPageState extends State<OrderTrackingPage> {
-  // ------------- review
-  // متغيرات لحفظ قيم التقييم داخل الـ Bottom Sheet
   double _selectedRating = 0;
   final TextEditingController _reviewController = TextEditingController();
-  bool _isToolStatusChecked = false; // لمتابعة حالة مربع التأكيد
-
-  // 1. دالة عرض الـ Bottom Sheet للتقييم
+  bool _isToolStatusChecked = false;
   void _showRatingSheet() {
     showModalBottomSheet(
       context: context,
@@ -55,7 +50,6 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
                 ),
               ),
               const SizedBox(height: 15),
-              // نجوم التقييم
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(5, (index) {
@@ -94,10 +88,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
     );
   }
 
-  // 2. دالة إرسال التقييم للسيرفر (سنربطها لاحقاً بالـ API)
-  // 2. دالة إرسال التقييم للسيرفر
   Future<void> _submitReview() async {
-    // التأكد من أن المستخدم اختار تقييم على الأقل
     if (_selectedRating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please select a rating star")),
@@ -109,21 +100,15 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
 
     try {
       final String? token = await AuthService.getToken();
-
-      // تجهيز البيانات بناءً على نوع المستخدم (مالك يقيم مستأجر أو مستأجر يقيم أداة)
       Map<String, dynamic> body = {
         "Review_Value": _selectedRating,
         "Review_Text": _reviewController.text,
         "Review_Type": widget.isOwner ? "U" : "T",
-        "Order_ID": currentOrder['Order_ID'], // إرسال رقم الطلب هنا ضروري جداً
+        "Order_ID": currentOrder['Order_ID'],
       };
-
-      // إضافة الهدف من التقييم
       if (widget.isOwner) {
-        // المالك يقيم المستأجر الذي في الطلب
         body["Target_User"] = currentOrder['User_ID'];
       } else {
-        // المستأجر يقيم الأداة التي في الطلب
         body["Target_Tool"] = currentOrder['Tool_ID'];
       }
 
@@ -143,7 +128,6 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
           ),
         );
         await _fetchOrderDetails();
-        // تصفير الحقول بعد النجاح
         setState(() {
           _selectedRating = 0;
           _reviewController.clear();
@@ -158,7 +142,6 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
       print("Submit Review failed: $e");
     }
   }
-  // -------------
 
   final Color primaryColor = const Color(0xFFFFC72C);
   late dynamic currentOrder;
@@ -169,16 +152,12 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
     currentOrder = widget.order;
   }
 
-  // دالة لتحديث الحالة في السيرفر (تحتاج ربطها بـ API الخاص بك)
-  // داخل order_tracking_page.dart
   Future<void> _updateStatus(
     String newStatus,
     Map<String, dynamic> extraData,
   ) async {
     final String orderId = currentOrder['Order_ID'].toString();
     final String url = 'http://10.0.2.2:8000/api/orders/$orderId/';
-
-    // دمج الحالة مع الحقول الإضافية (مثل is_handed_to_delivery: true)
     Map<String, dynamic> body = {'Order_Status': newStatus, ...extraData};
 
     try {
@@ -214,7 +193,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
   }
 
   Future<void> _handleRefresh() async {
-    await _fetchOrderDetails(); // جلب البيانات الحقيقية من السيرفر
+    await _fetchOrderDetails();
   }
 
   Future<void> _fetchOrderDetails() async {
@@ -324,7 +303,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
               children: [
                 _buildInfoCard(),
                 const SizedBox(height: 16),
-                _buildInsuranceStatusCard(), // <-- إضافة حالة الضمان هنا
+                _buildInsuranceStatusCard(),
                 const SizedBox(height: 16),
                 _buildProgressCard(),
                 const SizedBox(height: 16),
@@ -345,12 +324,12 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
                     child: Container(
                       padding: const EdgeInsets.only(
                         bottom: 4,
-                      ), // المسافة بين النص والخط
+                      ),
                       decoration: const BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
-                            color: Colors.red, // لون الخط
-                            width: 1.0, // سمك الخط (حمله كما تحب)
+                            color: Colors.red,
+                            width: 1.0,
                           ),
                         ),
                       ),
@@ -368,7 +347,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
                             style: TextStyle(
                               color: Colors.red,
                               fontWeight:
-                                  FontWeight.bold, // جعل النص عريضاً أيضاً
+                                  FontWeight.bold,
                               fontSize: 14,
                             ),
                           ),
@@ -397,10 +376,8 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
           ) ??
           0;
     } else {
-      insuranceAmount = toolRealValue * 0.25; // حسبة احتياطية
+      insuranceAmount = toolRealValue * 0.25;
     }
-
-    // 3. نسبة الضمان (حساب النسبة المئوية)
     String insurancePercentage = toolRealValue > 0
         ? "${((insuranceAmount / toolRealValue) * 100).toStringAsFixed(0)}%"
         : "25%";
@@ -520,7 +497,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
                 children: [
                   Checkbox(
                     value: step['val'],
-                    onChanged: null, // تعطيل الضغط اليدوي
+                    onChanged: null,
                     shape: const CircleBorder(),
                     activeColor: primaryColor,
 
@@ -528,9 +505,8 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
                       states,
                     ) {
                       if (step['val'] == true) {
-                        return primaryColor; // اللون الأصفر (0xFFFFC72C) عند التفعيل
+                        return primaryColor;
                       }
-                      // اللون عند عدم التفعيل: برتقالي خفيف أو شفاف بدل الرمادي
                       return const Color.fromARGB(28, 158, 158, 158);
                     }),
                   ),
@@ -555,17 +531,14 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
     String status = currentOrder['Order_Status'];
 
     if (status == 'Completed') {
-      // التحقق مما إذا كان قد تم التقييم مسبقاً بناءً على دور المستخدم
       bool hasRatedTool = currentOrder['has_rated_tool'] ?? false;
       bool hasRatedCustomer = currentOrder['has_rated_customer'] ?? false;
 
       if (widget.isOwner) {
-        // إذا كان المالك وقد قيم العميل بالفعل، نخفي الزر
         if (hasRatedCustomer) return const SizedBox.shrink();
 
         return _actionBtn("Rate Customer ⭐", () => _showRatingSheet());
       } else {
-        // إذا كان المستأجر وقد قيم الأداة بالفعل، نخفي الزر
         if (hasRatedTool) return const SizedBox.shrink();
 
         return _actionBtn("Rate Tool ⭐", () => _showRatingSheet());
@@ -573,7 +546,6 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
     }
 
     if (widget.isOwner) {
-      // أزرار سياف (المالك)
       if (status == 'Accepted') {
         return _actionBtn(
           "Handed to Delivery",
@@ -583,7 +555,6 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
       if (status == 'Returning') {
         return Column(
           children: [
-            // المربع التحذيري الأصفر
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -611,7 +582,6 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
               ),
             ),
             const SizedBox(height: 10),
-            // مربع التأكيد (Checkbox)
             CheckboxListTile(
               value: _isToolStatusChecked,
               onChanged: (val) => setState(() => _isToolStatusChecked = val!),
@@ -624,19 +594,17 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
               contentPadding: EdgeInsets.zero,
             ),
             const SizedBox(height: 10),
-            // زر الإنهاء (يتفعل فقط إذا تم الضغط على الصح)
             _actionBtn(
               "Finish Order",
               _isToolStatusChecked
                   ? () => _updateStatus('Completed', {})
-                  : () {}, // دالة فارغة إذا لم يتم التأكيد
+                  : () {}, 
               color: _isToolStatusChecked ? Colors.black : Colors.grey,
             ),
           ],
         );
       }
     } else {
-      // أزرار أيمن (المستأجر)
       if (status == 'Pending') {
         return _actionBtn(
           "Cancel Order",

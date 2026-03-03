@@ -58,7 +58,6 @@ class _RentedToolsPageState extends State<RentedToolsPage> {
               return const Center(child: Text("No rental history found"));
             }
 
-            // --- منطق الفرز للفصل بين النشط والمكتمل ---
             final allOrders = snapshot.data!;
             final activeOrders = allOrders
                 .where(
@@ -83,17 +82,14 @@ class _RentedToolsPageState extends State<RentedToolsPage> {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                // أولاً: الأدوات التي استأجرتها ولا تزال نشطة
                 ...activeOrders.map((order) => _buildOrderCard(order)).toList(),
 
-                // ثانياً: الفاصل للأرشيف
                 if (inactiveOrders.isNotEmpty) ...[
                   const SizedBox(height: 10),
-                  _buildSectionDivider("History"), // تم تغيير الاسم ليكون أشمل
+                  _buildSectionDivider("History"),
                   const SizedBox(height: 12),
                 ],
 
-                // ثالثاً: الطلبات غير النشطة (مكتمل، ملغي، مرفوض)
                 ...inactiveOrders
                     .map((order) => _buildOrderCard(order))
                     .toList(),
@@ -105,7 +101,6 @@ class _RentedToolsPageState extends State<RentedToolsPage> {
     );
   }
 
-  // ويدجت الفاصل الأنيق
   Widget _buildSectionDivider(String label) {
     return Row(
       children: [
@@ -126,7 +121,6 @@ class _RentedToolsPageState extends State<RentedToolsPage> {
   Widget _buildOrderCard(dynamic order) {
     String status = order['Order_Status'];
 
-    // هل الطلب منتهي (مكتمل أو ملغي أو مرفوض)؟
     bool isInactive =
         status == 'Completed' || status == 'Cancelled' || status == 'Rejected';
 
@@ -186,12 +180,10 @@ class _RentedToolsPageState extends State<RentedToolsPage> {
             ),
           ],
         ),
-        // إخفاء سهم الانتقال إذا كان الطلب ملغياً أو مرفوضاً
         trailing: (status == 'Cancelled' || status == 'Rejected')
             ? null
             : const Icon(Icons.chevron_right),
         onTap: () async {
-          // --- المنطق الجديد هنا ---
           if (status == 'Cancelled' || status == 'Rejected') {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -200,7 +192,7 @@ class _RentedToolsPageState extends State<RentedToolsPage> {
                 duration: const Duration(seconds: 1),
               ),
             );
-            return; // منع الانتقال
+            return;
           }
 
           final result = await Navigator.push(

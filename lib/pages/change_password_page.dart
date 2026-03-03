@@ -21,13 +21,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   bool _isLoading = false;
 
   Future<void> _updatePassword() async {
-    // 1. التحقق من تطابق كلمتي السر الجديدتين
     if (_newPassController.text != _confirmPassController.text) {
       _showSnackBar("New passwords do not match!", Colors.red);
       return;
     }
 
-    // 2. التحقق من ملء الحقول
     if (_oldPassController.text.isEmpty || _newPassController.text.isEmpty) {
       _showSnackBar("Please fill all fields", Colors.orange);
       return;
@@ -103,7 +101,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             ),
             const SizedBox(height: 30),
 
-            // حقل الباسورد القديم
             MyTextFieldWS(
               label: "Current Password",
               controller: _oldPassController,
@@ -111,7 +108,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             ),
             const SizedBox(height: 20),
 
-            // حقل الباسورد الجديد
             MyTextFieldWS(
               label: "New Password",
               controller: _newPassController,
@@ -119,14 +115,12 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             ),
             const SizedBox(height: 20),
 
-            // تأكيد الباسورد الجديد
             MyTextFieldWS(
               label: "Confirm New Password",
               controller: _confirmPassController,
               obscureText: true,
             ),
 
-            // رابط نسيت كلمة السر أسفل اليمين
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
