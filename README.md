@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://github.com/iamaymo/adati_mobile_app/blob/main/images/adati_logo.png" alt="Adati Logo" width="120"/>
+<img src="/images/adati_logo.png" alt="Adati Logo" width="120"/>
 
 # 🛠️ Adati
 
@@ -107,14 +107,11 @@ The app addresses a real gap in the local Yemeni market: expensive professional 
 
 ## 📱 App Screenshots
 
-<details>
-<summary>Click to expand screenshots</summary>
-
 ### Onboarding & Auth
 
 | Gateway                             | Login                               | Register                                            | ID Verification                      |
 | ----------------------------------- | ----------------------------------- | --------------------------------------------------- | ------------------------------------ |
-| <img src="https://github.com/iamaymo/adati_mobile_app/blob/main/md/2.png"  width="150"/> | <img src="/md/3.png"  width="150"/> | <img src="/md/4.png" alt="Adati Logo" width="150"/> | <img src="/md/35.png"  width="150"/> |
+| <img src="/md/2.png"  width="150"/> | <img src="/md/3.png"  width="150"/> | <img src="/md/4.png" alt="Adati Logo" width="150"/> | <img src="/md/35.png"  width="150"/> |
 
 ### Home & Search
 
@@ -145,8 +142,6 @@ The app addresses a real gap in the local Yemeni market: expensive professional 
 | Reports Problem                      | Reports Problem 2                    | Reports Problem 3                    | Support and Help                     |
 | ------------------------------------ | ------------------------------------ | ------------------------------------ | ------------------------------------ |
 | <img src="/md/32.png"  width="150"/> | <img src="/md/33.png"  width="150"/> | <img src="/md/34.png"  width="150"/> | <img src="/md/30.png"  width="150"/> |
-
-</details>
 
 ---
 
@@ -246,7 +241,7 @@ The app communicates with the Django REST backend via HTTP.
 | --------- | ------------------------------------------------------------------------------------------------ |
 | **Admin** | Full platform control via Django Admin Dashboard                                                 |
 | **User**  | Can list tools for rent, browse & rent tools, manage orders, track rentals, and rate tools/users |
-| **Guest** | Can only browse tools|
+| **Guest** | Can only browse tools                                                                            |
 
 ---
 
@@ -299,7 +294,6 @@ The Django REST API backend lives here:
 The backend README contains setup instructions, migration commands, and server run commands.
 
 ---
-
 
 <div align="center">
 
